@@ -25,7 +25,7 @@ export function fetchStation() {
 
 export async function fetchProgramme() {
   const res = await fetch(
-    `${BASE}/rest/v1/programme_items?select=id,position,type,video_id,src,title,block,slot,thumb&active=eq.true&order=position.asc`,
+    `${BASE}/rest/v1/programme_items?select=id,position,type,video_id,src,title,block,slot,thumb,tags,smart&active=eq.true&order=position.asc`,
     { headers: HEADERS }
   );
   if (!res.ok) throw new Error('programme fetch failed: ' + res.status);

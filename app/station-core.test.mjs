@@ -76,7 +76,7 @@ test('mapRow converts a DB programme row into a player item', async () => {
     mapRow({ id: 'u1', position: 2, type: 'youtube', video_id: 'abc123', src: null,
              title: 'T', block: 'B', slot: 60, thumb: 'thumb-b', active: true }),
     { id: 'u1', type: 'youtube', videoId: 'abc123', src: null, title: 'T',
-      block: 'B', slot: 60, thumb: 'thumb-b' }
+      block: 'B', slot: 60, thumb: 'thumb-b', tags: [], smart: false }
   );
 });
 
@@ -86,4 +86,16 @@ test('mapRow defaults a missing thumb and coerces slot to a number', async () =>
                         title: 'S', block: 'B', slot: '90', thumb: null });
   assert.equal(item.slot, 90);
   assert.equal(item.thumb, 'thumb-a');
+});
+
+test('mapRow carries tags and smart through, defaulting when absent', async () => {
+  const { mapRow } = await import('./station-core.mjs');
+  const full = mapRow({ id: 'u3', type: 'youtube', video_id: 'x', src: null, title: 'T',
+                        block: 'B', slot: 60, thumb: 'thumb-a', tags: ['music'], smart: true });
+  assert.deepEqual(full.tags, ['music']);
+  assert.equal(full.smart, true);
+  const bare = mapRow({ id: 'u4', type: 'station', video_id: null, src: 'x.mp4',
+                        title: 'S', block: 'B', slot: 60, thumb: null });
+  assert.deepEqual(bare.tags, []);
+  assert.equal(bare.smart, false);
 });

@@ -92,6 +92,15 @@
   .thumb-d { background: linear-gradient(135deg, oklch(0.26 0.05 150), oklch(0.14 0.02 280)); }
   .thumb-e { background: linear-gradient(135deg, oklch(0.3 0.06 350), oklch(0.14 0.02 280)); }
 
+  .why-panel {
+    margin-top: 14px; padding: 16px 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 14.5px;
+  }
+  .why-panel ul { margin: 0 0 8px 18px; }
+  .why-panel li { margin-bottom: 4px; }
+  .why-panel .why-note { color: var(--ink-muted); font-size: 13px; }
+
   .toast {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(8px);
     background: var(--surface-2); border: 1px solid var(--border);
@@ -178,8 +187,16 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
             Skip
           </button>
+          <button class="btn btn-ghost" id="btnWhy" aria-expanded="false" aria-controls="whyPanel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Why this?
+          </button>
           <p class="hint">Your reactions tune the station to you</p>
         </div>
+      </div>
+      <div class="why-panel" id="whyPanel" hidden>
+        <ul id="whyReasons"></ul>
+        <p class="why-note" id="whyNote">Taste learning happens on this device, inside the programme Dex curated.</p>
       </div>
     </div>
 
@@ -204,6 +221,7 @@
 import { totalSeconds, locate as coreLocate, livePosition as coreLivePosition,
          resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs';
 import { fetchStation, fetchProgramme, postSignal } from './station-api.mjs';
+import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs';
 
 const W3M = 'https://media.w3.org/2010/05/';
 const FALLBACK = [
@@ -245,15 +263,32 @@ const SESSION = (() => {
   } catch (e) { return 'anon'; }
 })();
 
+let TASTE = { items: {}, tags: {}, blocks: {} };
+let personalized = false;
+
+function localEvents() {
+  try { return JSON.parse(localStorage.getItem('station-one-signals') || '[]'); }
+  catch (e) { return []; }
+}
+
+function applyTaste(items) {
+  const byId = Object.fromEntries(items.map(i => [i.id, i]));
+  TASTE = buildTaste(localEvents(), byId);
+  const tuned = personalizeProgramme(items, TASTE);
+  personalized = tuned.some((it, i) => it.id !== items[i].id);
+  return tuned;
+}
+
 async function loadProgramme() {
   try {
     const [station, rows] = await Promise.all([fetchStation(), fetchProgramme()]);
     if (rows && rows.length) {
-      PROGRAMME = rows.map(mapRow);
+      PROGRAMME = applyTaste(rows.map(mapRow));
       TOTAL = totalSeconds(PROGRAMME);
       ANCHOR = Number(station.anchor_ms) || ANCHOR;
     }
   } catch (e) {
+    PROGRAMME = applyTaste(PROGRAMME);
     toast('Offline — playing the built-in demo programme');
   }
 }
@@ -312,6 +347,8 @@ function playItem(index, offset) {
   currentIndex = index;
   teardownPlayers();
   $('breakCard').classList.remove('active');
+  $('whyPanel').hidden = true;
+  $('btnWhy').setAttribute('aria-expanded', 'false');
   updateMeta(item, offset);
   renderGuide();
 
@@ -346,10 +383,13 @@ function playItem(index, offset) {
   logSignal('tune', item, { offset: Math.round(offset) });
 }
 
+let watchedSeconds = 0;
 function watchProgress(item, getTime) {
   clearInterval(progressTimer);
+  watchedSeconds = 0;
   progressTimer = setInterval(() => {
     const t = getTime();
+    watchedSeconds = Math.max(watchedSeconds, t);
     const pct = Math.min(1, t / item.slot);
     $('progressBar').style.transform = 'scaleX(' + pct + ')';
     const left = Math.max(0, item.slot - t);
@@ -361,6 +401,10 @@ function watchProgress(item, getTime) {
 function endOfItem(item, errored = false) {
   if (breakTimer) return;
   clearInterval(progressTimer);
+  if (!errored && item) {
+    const ratio = Math.min(1, watchedSeconds / item.slot);
+    logSignal('finish', item, { offset: Math.round(watchedSeconds), ratio });
+  }
   const { nextIndex, drift } = resolveAdvance(PROGRAMME, currentIndex, livePosition());
   localOffset += drift;
   stationBreak(nextIndex, errored);
@@ -462,6 +506,25 @@ $('btnLove').addEventListener('click', () => {
   $('btnLove').setAttribute('aria-pressed', String(loved));
   $('btnLove').querySelector('#loveLabel').textContent = loved ? 'Loved' : 'Love';
   if (loved) toast('Noted — more like this');
+});
+
+$('btnWhy').addEventListener('click', () => {
+  const item = PROGRAMME[currentIndex];
+  const panel = $('whyPanel');
+  const open = panel.hidden;
+  panel.hidden = !open;
+  $('btnWhy').setAttribute('aria-expanded', String(open));
+  if (open && item) {
+    const list = $('whyReasons');
+    list.replaceChildren();
+    const reasons = explain(TASTE, item);
+    if (personalized && item.smart) reasons.push('This block’s order is tuned to your taste.');
+    for (const r of reasons) {
+      const li = document.createElement('li');
+      li.textContent = r;
+      list.appendChild(li);
+    }
+  }
 });
 
 $('btnSkip').addEventListener('click', () => {

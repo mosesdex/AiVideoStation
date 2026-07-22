@@ -10,6 +10,8 @@ export function mapRow(row) {
     block: row.block,
     slot: Number(row.slot),
     thumb: row.thumb || 'thumb-a',
+    tags: row.tags || [],
+    smart: !!row.smart,
   };
 }
 
