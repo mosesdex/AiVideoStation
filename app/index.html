@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — Live</title>
+<meta name="description" content="Station One functional prototype: a personal TV station with one channel, always on.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../prototype/station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  /* ---- Tune-in view ---- */
+  .view-tunein {
+    min-height: 100dvh;
+    display: grid; place-items: center; padding: 24px; text-align: center;
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 110%, oklch(0.55 0.21 20 / 0.1), transparent 70%),
+      var(--bg);
+  }
+  .tunein-card { display: flex; flex-direction: column; align-items: center; max-width: 520px; }
+  .tunein-card .wordmark { font-size: 28px; }
+  .tunein-card .logline { margin-top: 10px; font-size: 15px; color: var(--ink-muted); }
+  .tunein-card .now-label { margin-top: 52px; }
+  .tunein-card .now-title {
+    margin-top: 14px; font-size: 23px; font-weight: 600; line-height: 1.25; text-wrap: balance;
+  }
+  .tunein-card .now-sub {
+    margin-top: 12px; display: flex; align-items: center; gap: 10px; justify-content: center;
+    font-size: 14px; color: var(--ink-muted);
+  }
+  .tunein-card .tune-btn { margin-top: 40px; }
+  .tunein-card .credit { margin-top: 56px; font-size: 13px; color: var(--ink-muted); }
+
+  /* ---- Player view ---- */
+  .view-player { display: none; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; max-width: 1200px; margin: 0 auto;
+  }
+  .topbar .wordmark { font-size: 17px; }
+  .layout {
+    max-width: 1200px; margin: 0 auto; padding: 8px 24px 48px;
+    display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start;
+  }
+  .stage-wrap { position: relative; }
+  .stage { background: #000; }
+  .stage iframe, .stage video {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+    display: block;
+  }
+  /* Station break card: fills the stage ONLY when no player is mounted */
+  .break-card {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; text-align: center; padding: 24px;
+    background: var(--surface);
+  }
+  .break-card.active { display: flex; }
+  .break-card .label { font-size: 14px; color: var(--ink-muted); }
+  .break-card .next-title { font-size: 23px; font-weight: 600; line-height: 1.25; text-wrap: balance; max-width: 24ch; }
+  .break-card .sub { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-muted); }
+  .break-card .countdown {
+    margin-top: 8px; font-size: 15px; font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress { height: 3px; background: var(--surface-2); border-radius: 999px; margin-top: 12px; overflow: hidden; }
+  .progress .bar {
+    height: 100%; width: 100%; background: var(--accent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 1s linear;
+  }
+
+  .below-stage {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 24px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .now-meta .block-label { font-size: 13px; color: var(--ink-muted); margin-bottom: 6px; }
+  .now-meta h1 { font-size: 23px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; text-wrap: balance; max-width: 30ch; }
+  .now-meta .sub { margin-top: 8px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-muted); }
+  .reactions { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; max-width: 100%; }
+  .reactions .hint { width: 100%; text-align: right; margin-top: 8px; font-size: 13px; color: var(--ink-muted); }
+
+  .guide { position: sticky; top: 16px; }
+  .guide-list { display: flex; flex-direction: column; gap: 4px; }
+  .guide-foot { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--ink-muted); }
+  .thumb-a { background: linear-gradient(135deg, oklch(0.28 0.06 300), oklch(0.14 0.02 280)); }
+  .thumb-b { background: linear-gradient(135deg, oklch(0.3 0.08 60), oklch(0.14 0.02 280)); }
+  .thumb-c { background: linear-gradient(135deg, oklch(0.28 0.07 200), oklch(0.14 0.02 280)); }
+  .thumb-d { background: linear-gradient(135deg, oklch(0.26 0.05 150), oklch(0.14 0.02 280)); }
+  .thumb-e { background: linear-gradient(135deg, oklch(0.3 0.06 350), oklch(0.14 0.02 280)); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(8px);
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 10px 20px; font-size: 14px;
+    opacity: 0; pointer-events: none; z-index: 50;
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; padding: 0 0 40px; gap: 0; }
+    .topbar { padding: 14px 16px; }
+    .stage { border-radius: 0; }
+    .progress { margin: 12px 16px 0; }
+    .below-stage { padding: 16px; margin-top: 0; }
+    .guide { position: static; padding: 8px 16px 0; }
+    .reactions .hint { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ Tune-in (autoplay gesture gate) ════════ -->
+<section class="view-tunein" id="viewTunein">
+  <div class="tunein-card">
+    <span class="wordmark">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </span>
+    <p class="logline">Programmed by a person. Tuned to you.</p>
+    <div class="now-label"><span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span></div>
+    <h1 class="now-title" id="tuneinTitle">…</h1>
+    <div class="now-sub">
+      <span class="badge" id="tuneinBadge">YouTube</span>
+      <span id="tuneinSub">…</span>
+    </div>
+    <button class="btn btn-primary tune-btn" id="btnTunein">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      Tune in
+    </button>
+    <p class="credit">A personal station by Dex · One channel, always on · <a href="../index.html" style="color:inherit">research</a> · <a href="../brand.html" style="color:inherit">brand</a></p>
+  </div>
+</section>
+
+<!-- ════════ Player ════════ -->
+<section class="view-player" id="viewPlayer">
+  <header class="topbar">
+    <span class="wordmark">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </span>
+    <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+  </header>
+
+  <main class="layout">
+    <div class="stage-wrap">
+      <div class="stage-glow" aria-hidden="true"></div>
+      <div class="stage">
+        <div id="playerMount"></div>
+        <div class="break-card" id="breakCard" aria-live="polite">
+          <span class="label">Up next on Station One</span>
+          <span class="next-title" id="breakTitle"></span>
+          <span class="sub"><span class="badge" id="breakBadge"></span><span id="breakBlock"></span></span>
+          <span class="countdown" id="breakCount"></span>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
+
+      <div class="below-stage">
+        <div class="now-meta">
+          <div class="block-label" id="nowBlock">…</div>
+          <h1 id="nowTitle">…</h1>
+          <div class="sub">
+            <span class="badge" id="nowBadge">YouTube</span>
+            <span id="nowTime">…</span>
+          </div>
+        </div>
+        <div class="reactions" role="group" aria-label="Rate this programme">
+          <button class="btn btn-ghost" id="btnLove" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span id="loveLabel">Love</span>
+          </button>
+          <button class="btn btn-ghost" id="btnSkip">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            Skip
+          </button>
+          <p class="hint">Your reactions tune the station to you</p>
+        </div>
+      </div>
+    </div>
+
+    <aside class="guide" aria-label="Programme guide">
+      <h2>Up next on Station One</h2>
+      <div class="guide-list" id="guideList"></div>
+      <p class="guide-foot">Programme loops around the clock · programmed by Dex</p>
+    </aside>
+  </main>
+</section>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════
+   Station One — functional Phase 0 prototype.
+   Compliance notes:
+   - YouTube plays ONLY via the official IFrame Player API, ungated,
+     unmodified, with nothing rendered over the player. The break
+     card mounts only after the player is destroyed (ENDED/error).
+   - Sources are labeled YouTube vs Station everywhere (commingling
+     disclosure). Station items are open-license Blender films
+     served from Google's public sample bucket as demo stand-ins
+     for self-hosted HLS.
+   ═══════════════════════════════════════════════════════════════ */
+
+const W3M = 'https://media.w3.org/2010/05/';
+const PROGRAMME = [
+  { id: 'bbb-st',  type: 'station', src: W3M + 'bunny/movie.mp4', slot: 596,
+    title: 'Big Buck Bunny — Station Feature', block: 'Evening Block', thumb: 'thumb-a' },
+  { id: 'zoo-yt',  type: 'youtube', videoId: 'jNQXAC9IVRw', slot: 19,
+    title: 'From the Archive: Me at the Zoo', block: 'Station Ident', thumb: 'thumb-c' },
+  { id: 'psy-yt',  type: 'youtube', videoId: '9bZkp7q19f0', slot: 253,
+    title: 'Music Break: Gangnam Style', block: 'Evening Block', thumb: 'thumb-b' },
+  { id: 'sintel',  type: 'station', src: W3M + 'sintel/trailer.mp4', slot: 52,
+    title: 'Trailer: Sintel — Coming to Station One', block: 'Station Ident', thumb: 'thumb-d' },
+  { id: 'rick-yt', type: 'youtube', videoId: 'dQw4w9WgXcQ', slot: 213,
+    title: 'Late Night Music: Never Gonna Give You Up', block: 'Late Night Block', thumb: 'thumb-e' },
+];
+const TOTAL = PROGRAMME.reduce((s, p) => s + p.slot, 0);
+const ANCHOR = Date.UTC(2026, 0, 1); // schedule epoch: all viewers share the same clock
+const BREAK_SECONDS = 3;
+
+let currentIndex = -1;
+let localOffset = 0;      // seconds the local programme has drifted from wall clock (skips, early endings)
+let ytPlayer = null;
+let stationVideo = null;
+let breakTimer = null;
+let progressTimer = null;
+let ytApiReady = false;
+let pendingStart = null;
+
+const $ = id => document.getElementById(id);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- schedule math ---------- */
+function livePosition() {
+  const elapsed = (Date.now() - ANCHOR) / 1000 + localOffset;
+  return ((elapsed % TOTAL) + TOTAL) % TOTAL;
+}
+function locate(pos) {
+  let acc = 0;
+  for (let i = 0; i < PROGRAMME.length; i++) {
+    if (pos < acc + PROGRAMME[i].slot) return { index: i, offset: pos - acc };
+    acc += PROGRAMME[i].slot;
+  }
+  return { index: 0, offset: 0 };
+}
+function slotStartClock(index) {
+  // wall-clock time this slot started/starts, for guide display
+  const pos = livePosition();
+  let acc = 0;
+  for (let i = 0; i < index; i++) acc += PROGRAMME[i].slot;
+  const delta = acc - pos; // seconds from now (may be negative for current)
+  return new Date(Date.now() + delta * 1000);
+}
+const fmtClock = d => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+const fmtMin = s => Math.max(1, Math.round(s / 60)) + ' min';
+
+/* ---------- signals (Love / Skip / watch) ---------- */
+function logSignal(action, item, extra = {}) {
+  try {
+    const key = 'station-one-signals';
+    const all = JSON.parse(localStorage.getItem(key) || '[]');
+    all.push({ action, item: item.id, ts: Date.now(), ...extra });
+    localStorage.setItem(key, JSON.stringify(all.slice(-500)));
+  } catch (e) { /* private mode: signals are best-effort */ }
+}
+const lovedSet = () => {
+  try { return new Set(JSON.parse(localStorage.getItem('station-one-loved') || '[]')); }
+  catch (e) { return new Set(); }
+};
+function toggleLove(item) {
+  const set = lovedSet();
+  const loved = set.has(item.id);
+  if (loved) set.delete(item.id); else set.add(item.id);
+  try { localStorage.setItem('station-one-loved', JSON.stringify([...set])); } catch (e) {}
+  logSignal(loved ? 'unlove' : 'love', item);
+  return !loved;
+}
+
+/* ---------- players ---------- */
+function teardownPlayers() {
+  clearInterval(progressTimer);
+  if (ytPlayer) { try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
+  if (stationVideo) { stationVideo.pause(); stationVideo.remove(); stationVideo = null; }
+  const mount = $('playerMount');
+  mount.replaceChildren();
+  const holder = document.createElement('div');
+  holder.id = 'ytHolder';
+  mount.appendChild(holder);
+}
+
+function playItem(index, offset) {
+  const item = PROGRAMME[index];
+  currentIndex = index;
+  teardownPlayers();
+  $('breakCard').classList.remove('active');
+  updateMeta(item, offset);
+  renderGuide();
+
+  if (item.type === 'youtube') {
+    const start = Math.max(0, Math.floor(offset));
+    if (!ytApiReady) { pendingStart = { index, offset }; return; }
+    ytPlayer = new YT.Player('ytHolder', {
+      videoId: item.videoId,
+      playerVars: { autoplay: 1, start, rel: 0, playsinline: 1 },
+      events: {
+        onReady: e => { e.target.playVideo(); watchProgress(item, () => ytPlayer ? ytPlayer.getCurrentTime() : 0); },
+        onStateChange: e => { if (e.data === YT.PlayerState.ENDED) endOfItem(item); },
+        onError: () => { toast('That one would not play — skipping ahead'); endOfItem(item, true); },
+      },
+    });
+  } else {
+    const v = document.createElement('video');
+    v.src = item.src;
+    v.controls = true;
+    v.playsInline = true;
+    v.autoplay = true;
+    v.addEventListener('loadedmetadata', () => {
+      if (offset > 1 && offset < v.duration - 2) v.currentTime = offset;
+    }, { once: true });
+    v.addEventListener('ended', () => endOfItem(item));
+    v.addEventListener('error', () => { toast('Station feed hiccup — skipping ahead'); endOfItem(item, true); });
+    $('playerMount').replaceChildren(v);
+    stationVideo = v;
+    v.play().catch(() => {});
+    watchProgress(item, () => stationVideo ? stationVideo.currentTime : 0);
+  }
+  logSignal('tune', item, { offset: Math.round(offset) });
+}
+
+function watchProgress(item, getTime) {
+  clearInterval(progressTimer);
+  progressTimer = setInterval(() => {
+    const t = getTime();
+    const pct = Math.min(1, t / item.slot);
+    $('progressBar').style.transform = 'scaleX(' + pct + ')';
+    const left = Math.max(0, item.slot - t);
+    $('nowTime').textContent = fmtMin(left) + ' left';
+    // slot ended but media is longer than the slot: keep linear time honest
+    if (t >= item.slot) endOfItem(item);
+  }, 1000);
+}
+
+function endOfItem(item, errored = false) {
+  if (breakTimer) return; // already in a break
+  clearInterval(progressTimer);
+  // resync local drift: next item starts NOW
+  const pos = livePosition();
+  const { index, offset } = locate(pos);
+  let nextIndex, drift;
+  if (index === currentIndex) {
+    // media ended before its slot did: pull the schedule forward locally
+    nextIndex = (currentIndex + 1) % PROGRAMME.length;
+    drift = PROGRAMME[currentIndex].slot - offset;
+  } else {
+    nextIndex = index; // wall clock already moved on
+    drift = 0;
+  }
+  localOffset += drift;
+  stationBreak(nextIndex, errored);
+}
+
+function stationBreak(nextIndex, quick = false) {
+  teardownPlayers();
+  const next = PROGRAMME[nextIndex];
+  $('breakTitle').textContent = next.title;
+  $('breakBadge').textContent = next.type === 'youtube' ? 'YouTube' : 'Station';
+  $('breakBadge').className = 'badge' + (next.type === 'station' ? ' station' : '');
+  $('breakBlock').textContent = next.block + ' · ' + fmtMin(next.slot);
+  $('breakCard').classList.add('active');
+  let n = (quick || reduced) ? 1 : BREAK_SECONDS;
+  $('breakCount').textContent = 'in ' + n;
+  breakTimer = setInterval(() => {
+    n -= 1;
+    if (n <= 0) {
+      clearInterval(breakTimer); breakTimer = null;
+      playItem(nextIndex, 0);
+    } else {
+      $('breakCount').textContent = 'in ' + n;
+    }
+  }, 1000);
+}
+
+/* ---------- UI ---------- */
+function updateMeta(item, offset) {
+  $('nowBlock').textContent = item.block + ' · ends ' + fmtClock(new Date(Date.now() + (item.slot - offset) * 1000));
+  $('nowTitle').textContent = item.title;
+  $('nowBadge').textContent = item.type === 'youtube' ? 'YouTube' : 'Station';
+  $('nowBadge').className = 'badge' + (item.type === 'station' ? ' station' : '');
+  $('nowTime').textContent = fmtMin(item.slot - offset) + ' left';
+  const loved = lovedSet().has(item.id);
+  $('btnLove').classList.toggle('loved', loved);
+  $('btnLove').setAttribute('aria-pressed', String(loved));
+  $('btnLove').querySelector('#loveLabel').textContent = loved ? 'Loved' : 'Love';
+  document.title = 'Station One — ' + item.title;
+}
+
+function renderGuide() {
+  const list = $('guideList');
+  list.replaceChildren();
+  for (let k = 0; k < 4; k++) {
+    const idx = (currentIndex + k) % PROGRAMME.length;
+    const item = PROGRAMME[idx];
+    const row = document.createElement('div');
+    row.className = 'guide-item' + (k === 0 ? ' now' : '');
+    if (k === 0) row.setAttribute('aria-current', 'true');
+    const when = k === 0 ? 'Now' : fmtClock(slotStartClock(currentIndex + k));
+    row.innerHTML =
+      '<span class="time">' + when + '</span>' +
+      '<span class="thumb ' + item.thumb + '" aria-hidden="true"></span>' +
+      '<span class="meta"><span class="title"></span>' +
+      '<span class="sub"><span class="badge' + (item.type === 'station' ? ' station' : '') + '">' +
+      (item.type === 'youtube' ? 'YouTube' : 'Station') + '</span></span></span>';
+    row.querySelector('.title').textContent = item.title;
+    list.appendChild(row);
+  }
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ---------- tune-in flow ---------- */
+function refreshTunein() {
+  const { index, offset } = locate(livePosition());
+  const item = PROGRAMME[index];
+  $('tuneinTitle').textContent = item.title;
+  $('tuneinBadge').textContent = item.type === 'youtube' ? 'YouTube' : 'Station';
+  $('tuneinBadge').className = 'badge' + (item.type === 'station' ? ' station' : '');
+  $('tuneinSub').textContent = item.block + ' · ' + fmtMin(item.slot - offset) + ' left';
+}
+refreshTunein();
+setInterval(() => { if ($('viewTunein').style.display !== 'none') refreshTunein(); }, 30000);
+
+$('btnTunein').addEventListener('click', () => {
+  $('viewTunein').style.display = 'none';
+  $('viewPlayer').style.display = 'block';
+  const { index, offset } = locate(livePosition());
+  playItem(index, offset);
+});
+
+$('btnLove').addEventListener('click', () => {
+  const item = PROGRAMME[currentIndex];
+  if (!item) return;
+  const loved = toggleLove(item);
+  $('btnLove').classList.toggle('loved', loved);
+  $('btnLove').setAttribute('aria-pressed', String(loved));
+  $('btnLove').querySelector('#loveLabel').textContent = loved ? 'Loved' : 'Love';
+  if (loved) toast('Noted — more like this');
+});
+
+$('btnSkip').addEventListener('click', () => {
+  const item = PROGRAMME[currentIndex];
+  if (!item || breakTimer) return;
+  logSignal('skip', item);
+  toast('Skipping — noted for your tuning');
+  endOfItem(item, true);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || e.target.tagName === 'BUTTON' || e.target.tagName === 'VIDEO') return;
+  if ($('viewPlayer').style.display === 'none') return;
+  e.preventDefault();
+  if (ytPlayer && ytPlayer.getPlayerState) {
+    ytPlayer.getPlayerState() === YT.PlayerState.PLAYING ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+  } else if (stationVideo) {
+    stationVideo.paused ? stationVideo.play() : stationVideo.pause();
+  }
+});
+
+/* ---------- YouTube IFrame API bootstrap ---------- */
+window.onYouTubeIframeAPIReady = function () {
+  ytApiReady = true;
+  if (pendingStart) { const p = pendingStart; pendingStart = null; playItem(p.index, p.offset); }
+};
+const tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
+</script>
+</body>
+</html>
