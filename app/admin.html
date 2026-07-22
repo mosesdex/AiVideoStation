@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — Master Control</title>
+<meta name="description" content="Station One owner admin: programme the station.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../prototype/station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  .page { max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .topbar .wordmark { font-size: 17px; }
+  .topbar .role { font-size: 13px; color: var(--ink-muted); }
+
+  .gate { margin: 12vh auto 0; max-width: 420px; text-align: center; }
+  .gate h1 { font-family: var(--font-identity); font-size: 32px; font-weight: 650; letter-spacing: -0.02em; }
+  .gate p { margin-top: 10px; color: var(--ink-muted); font-size: 15px; }
+  .gate form { margin-top: 28px; display: flex; gap: 10px; }
+  .field {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--ink); font: inherit; font-size: 15px;
+    padding: 12px 14px; min-width: 0;
+  }
+  .field:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .gate .err { margin-top: 12px; font-size: 14px; color: oklch(0.7 0.19 25); min-height: 20px; }
+
+  .editor { display: none; }
+  .onair-line {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px; margin-bottom: 24px;
+    font-size: 14.5px;
+  }
+  .onair-line strong { font-weight: 600; }
+  .onair-line .spacer { flex: 1; }
+  .onair-line a { color: var(--ink-muted); }
+
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row {
+    display: grid; grid-template-columns: 28px 1fr auto; gap: 14px; align-items: start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .row .pos {
+    font-family: var(--font-identity); font-weight: 650; color: var(--accent);
+    font-size: 17px; padding-top: 8px; font-variant-numeric: tabular-nums;
+  }
+  .row .fields { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+  .row .fields .wide { grid-column: 1 / -1; }
+  .row label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-muted); margin-bottom: 4px; }
+  .row .field { width: 100%; padding: 9px 12px; font-size: 14px; }
+  select.field { appearance: none; }
+  .row .tools { display: flex; flex-direction: column; gap: 6px; }
+  .icon-btn {
+    width: 34px; height: 34px; display: grid; place-items: center;
+    border: 1px solid var(--border); border-radius: 8px; color: var(--ink-muted);
+    transition: background 150ms var(--ease), color 150ms var(--ease);
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+  .icon-btn.danger:hover { color: oklch(0.7 0.19 25); }
+
+  .actions { display: flex; gap: 12px; margin-top: 22px; align-items: center; flex-wrap: wrap; }
+  .status { font-size: 14px; color: var(--ink-muted); }
+  .status.ok { color: var(--ok); }
+  .status.err { color: oklch(0.7 0.19 25); }
+
+  @media (max-width: 640px) {
+    .row { grid-template-columns: 20px 1fr auto; }
+    .row .fields { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <a class="wordmark" href="./" style="text-decoration:none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </a>
+    <span class="role">Master Control</span>
+  </header>
+
+  <!-- Key gate -->
+  <section class="gate" id="gate">
+    <h1>Master Control</h1>
+    <p>Enter your station key to programme the channel. The key stays on this device only.</p>
+    <form id="gateForm">
+      <input class="field" id="keyInput" type="password" autocomplete="current-password"
+             placeholder="Station key" aria-label="Station key" required>
+      <button class="btn btn-primary" style="font-size:15px; padding:12px 26px" type="submit">Unlock</button>
+    </form>
+    <p class="err" id="gateErr" role="alert"></p>
+  </section>
+
+  <!-- Editor -->
+  <section class="editor" id="editor">
+    <div class="onair-line">
+      <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+      <span>Viewers are watching <strong id="onairTitle">…</strong></span>
+      <span class="spacer"></span>
+      <a href="./" target="_blank" rel="noopener">Open the station</a>
+    </div>
+
+    <div class="rows" id="rows"></div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" id="btnAdd">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add programme item
+      </button>
+      <button class="btn btn-primary" style="font-size:15px; padding:12px 30px" id="btnSave">Publish programme</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </section>
+</div>
+
+<template id="rowTpl">
+  <div class="row">
+    <span class="pos"></span>
+    <div class="fields">
+      <div class="wide">
+        <label>Title</label>
+        <input class="field f-title" placeholder="What viewers see in the guide">
+      </div>
+      <div>
+        <label>Source</label>
+        <select class="field f-type">
+          <option value="youtube">YouTube</option>
+          <option value="station">Station (your video URL)</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-srclabel">YouTube video ID</label>
+        <input class="field f-src" placeholder="e.g. dQw4w9WgXcQ">
+      </div>
+      <div>
+        <label>Block</label>
+        <input class="field f-block" placeholder="Evening Block">
+      </div>
+      <div>
+        <label>Slot length (minutes)</label>
+        <input class="field f-slot" type="number" min="0.5" step="0.5" placeholder="10">
+      </div>
+    </div>
+    <div class="tools">
+      <button class="icon-btn f-up" type="button" aria-label="Move up"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
+      <button class="icon-btn f-down" type="button" aria-label="Move down"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      <button class="icon-btn danger f-del" type="button" aria-label="Delete item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+    </div>
+  </div>
+</template>
+
+<script type="module">
+import { totalSeconds, locate, livePosition, mapRow } from './station-core.mjs';
+import { fetchStation, fetchProgramme, verifyOwnerKey, saveProgramme } from './station-api.mjs';
+
+const $ = id => document.getElementById(id);
+let items = [];      // editor model: {type, videoId, src, title, block, slot}
+let anchor = Date.UTC(2026, 0, 1);
+let stationKey = sessionStorage.getItem('station-one-key') || '';
+
+const THUMBS = ['thumb-a', 'thumb-b', 'thumb-c', 'thumb-d', 'thumb-e'];
+
+/* ---------- gate ---------- */
+$('gateForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const key = $('keyInput').value.trim();
+  $('gateErr').textContent = '';
+  try {
+    const ok = await verifyOwnerKey(key);
+    if (!ok) { $('gateErr').textContent = 'That key does not match. Check it and try again.'; return; }
+    stationKey = key;
+    sessionStorage.setItem('station-one-key', key);
+    openEditor();
+  } catch (err) {
+    $('gateErr').textContent = 'Could not reach the station backend. Try again.';
+  }
+});
+
+async function openEditor() {
+  $('gate').style.display = 'none';
+  $('editor').style.display = 'block';
+  const [station, rows] = await Promise.all([fetchStation(), fetchProgramme()]);
+  anchor = Number(station.anchor_ms) || anchor;
+  items = rows.map(mapRow);
+  render();
+}
+
+/* ---------- editor ---------- */
+function render() {
+  const list = $('rows');
+  list.replaceChildren();
+  items.forEach((item, i) => {
+    const node = $('rowTpl').content.firstElementChild.cloneNode(true);
+    node.querySelector('.pos').textContent = i + 1;
+    const fTitle = node.querySelector('.f-title');
+    const fType = node.querySelector('.f-type');
+    const fSrc = node.querySelector('.f-src');
+    const fSrcLabel = node.querySelector('.f-srclabel');
+    const fBlock = node.querySelector('.f-block');
+    const fSlot = node.querySelector('.f-slot');
+
+    fTitle.value = item.title || '';
+    fType.value = item.type;
+    fSrc.value = item.type === 'youtube' ? (item.videoId || '') : (item.src || '');
+    fBlock.value = item.block || '';
+    fSlot.value = item.slot ? +(item.slot / 60).toFixed(2) : '';
+    syncSrcLabel();
+
+    function syncSrcLabel() {
+      const yt = fType.value === 'youtube';
+      fSrcLabel.textContent = yt ? 'YouTube video ID' : 'Video URL (MP4/HLS)';
+      fSrc.placeholder = yt ? 'e.g. dQw4w9WgXcQ' : 'https://…/video.mp4';
+    }
+
+    fTitle.addEventListener('input', () => { item.title = fTitle.value; updateOnair(); });
+    fType.addEventListener('change', () => {
+      item.type = fType.value;
+      if (item.type === 'youtube') { item.videoId = fSrc.value.trim(); item.src = null; }
+      else { item.src = fSrc.value.trim(); item.videoId = null; }
+      syncSrcLabel();
+    });
+    fSrc.addEventListener('input', () => {
+      if (item.type === 'youtube') item.videoId = fSrc.value.trim();
+      else item.src = fSrc.value.trim();
+    });
+    fBlock.addEventListener('input', () => { item.block = fBlock.value; });
+    fSlot.addEventListener('input', () => { item.slot = Math.round(parseFloat(fSlot.value || '0') * 60); });
+
+    node.querySelector('.f-up').addEventListener('click', () => move(i, -1));
+    node.querySelector('.f-down').addEventListener('click', () => move(i, 1));
+    node.querySelector('.f-del').addEventListener('click', () => {
+      if (items.length <= 1) { setStatus('The station needs at least one programme item.', 'err'); return; }
+      items.splice(i, 1); render();
+    });
+    list.appendChild(node);
+  });
+  updateOnair();
+}
+
+function move(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= items.length) return;
+  [items[i], items[j]] = [items[j], items[i]];
+  render();
+}
+
+$('btnAdd').addEventListener('click', () => {
+  items.push({ type: 'youtube', videoId: '', src: null, title: '', block: '', slot: 600,
+               thumb: THUMBS[items.length % THUMBS.length] });
+  render();
+});
+
+function updateOnair() {
+  const valid = items.filter(it => it.slot > 0);
+  if (!valid.length) { $('onairTitle').textContent = '—'; return; }
+  const pos = livePosition(anchor, Date.now(), totalSeconds(valid), 0);
+  const { index } = locate(valid, pos);
+  $('onairTitle').textContent = valid[index].title || 'Untitled item';
+}
+setInterval(updateOnair, 30000);
+
+/* ---------- publish ---------- */
+$('btnSave').addEventListener('click', async () => {
+  const bad = items.findIndex(it =>
+    !it.title.trim() || !(it.slot > 0) ||
+    (it.type === 'youtube' ? !(it.videoId || '').trim() : !(it.src || '').trim()));
+  if (bad !== -1) { setStatus(`Item ${bad + 1} is missing a title, source, or slot length.`, 'err'); return; }
+  setStatus('Publishing…');
+  try {
+    const payload = items.map((it, i) => ({
+      type: it.type,
+      video_id: it.type === 'youtube' ? it.videoId.trim() : null,
+      src: it.type === 'station' ? it.src.trim() : null,
+      title: it.title.trim(),
+      block: (it.block || 'Programme').trim(),
+      slot: it.slot,
+      thumb: it.thumb || THUMBS[i % THUMBS.length],
+    }));
+    const n = await saveProgramme(stationKey, payload);
+    setStatus(`On air: programme published (${n} items). Viewers pick it up on next tune-in.`, 'ok');
+  } catch (err) {
+    setStatus('Publish failed — check your station key and connection.', 'err');
+  }
+});
+
+function setStatus(msg, cls = '') {
+  const s = $('status');
+  s.textContent = msg;
+  s.className = 'status ' + cls;
+}
+
+/* auto-unlock if a key is already in this session */
+if (stationKey) {
+  verifyOwnerKey(stationKey)
+    .then(ok => { if (ok) openEditor(); else sessionStorage.removeItem('station-one-key'); })
+    .catch(() => {});
+}
+</script>
+</body>
+</html>

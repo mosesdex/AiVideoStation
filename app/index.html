@@ -193,22 +193,20 @@
 
 <div class="toast" id="toast" role="status"></div>
 
-<script>
-'use strict';
+<script type="module">
 /* ═══════════════════════════════════════════════════════════════
-   Station One — functional Phase 0 prototype.
-   Compliance notes:
-   - YouTube plays ONLY via the official IFrame Player API, ungated,
-     unmodified, with nothing rendered over the player. The break
-     card mounts only after the player is destroyed (ENDED/error).
-   - Sources are labeled YouTube vs Station everywhere (commingling
-     disclosure). Station items are open-license Blender films
-     served from Google's public sample bucket as demo stand-ins
-     for self-hosted HLS.
+   Station One — Phase 1 viewer. Programme + anchor come from the
+   backend (Supabase); falls back to the built-in demo loop when
+   offline. Schedule math lives in station-core.mjs (tested).
+   Compliance: YouTube plays ONLY via the official IFrame API,
+   ungated, unmodified, nothing rendered over the player.
    ═══════════════════════════════════════════════════════════════ */
+import { totalSeconds, locate as coreLocate, livePosition as coreLivePosition,
+         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs';
+import { fetchStation, fetchProgramme, postSignal } from './station-api.mjs';
 
 const W3M = 'https://media.w3.org/2010/05/';
-const PROGRAMME = [
+const FALLBACK = [
   { id: 'bbb-st',  type: 'station', src: W3M + 'bunny/movie.mp4', slot: 596,
     title: 'Big Buck Bunny — Station Feature', block: 'Evening Block', thumb: 'thumb-a' },
   { id: 'zoo-yt',  type: 'youtube', videoId: 'jNQXAC9IVRw', slot: 19,
@@ -220,12 +218,14 @@ const PROGRAMME = [
   { id: 'rick-yt', type: 'youtube', videoId: 'dQw4w9WgXcQ', slot: 213,
     title: 'Late Night Music: Never Gonna Give You Up', block: 'Late Night Block', thumb: 'thumb-e' },
 ];
-const TOTAL = PROGRAMME.reduce((s, p) => s + p.slot, 0);
-const ANCHOR = Date.UTC(2026, 0, 1); // schedule epoch: all viewers share the same clock
+
+let PROGRAMME = FALLBACK;
+let TOTAL = totalSeconds(PROGRAMME);
+let ANCHOR = Date.UTC(2026, 0, 1);
 const BREAK_SECONDS = 3;
 
 let currentIndex = -1;
-let localOffset = 0;      // seconds the local programme has drifted from wall clock (skips, early endings)
+let localOffset = 0;
 let ytPlayer = null;
 let stationVideo = null;
 let breakTimer = null;
@@ -236,38 +236,51 @@ let pendingStart = null;
 const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ---------- schedule math ---------- */
-function livePosition() {
-  const elapsed = (Date.now() - ANCHOR) / 1000 + localOffset;
-  return ((elapsed % TOTAL) + TOTAL) % TOTAL;
-}
-function locate(pos) {
-  let acc = 0;
-  for (let i = 0; i < PROGRAMME.length; i++) {
-    if (pos < acc + PROGRAMME[i].slot) return { index: i, offset: pos - acc };
-    acc += PROGRAMME[i].slot;
+/* ---------- backend ---------- */
+const SESSION = (() => {
+  try {
+    let s = localStorage.getItem('station-one-session');
+    if (!s) { s = Math.random().toString(36).slice(2, 12); localStorage.setItem('station-one-session', s); }
+    return s;
+  } catch (e) { return 'anon'; }
+})();
+
+async function loadProgramme() {
+  try {
+    const [station, rows] = await Promise.all([fetchStation(), fetchProgramme()]);
+    if (rows && rows.length) {
+      PROGRAMME = rows.map(mapRow);
+      TOTAL = totalSeconds(PROGRAMME);
+      ANCHOR = Number(station.anchor_ms) || ANCHOR;
+    }
+  } catch (e) {
+    toast('Offline — playing the built-in demo programme');
   }
-  return { index: 0, offset: 0 };
 }
-function slotStartClock(index) {
-  // wall-clock time this slot started/starts, for guide display
-  const pos = livePosition();
-  let acc = 0;
-  for (let i = 0; i < index; i++) acc += PROGRAMME[i].slot;
-  const delta = acc - pos; // seconds from now (may be negative for current)
-  return new Date(Date.now() + delta * 1000);
+
+/* ---------- schedule ---------- */
+const livePosition = () => coreLivePosition(ANCHOR, Date.now(), TOTAL, localOffset);
+const locate = pos => coreLocate(PROGRAMME, pos);
+function slotStartClock(k) {
+  return new Date(Date.now() + slotStartDelta(PROGRAMME, livePosition(), k) * 1000);
 }
 const fmtClock = d => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 const fmtMin = s => Math.max(1, Math.round(s / 60)) + ' min';
 
-/* ---------- signals (Love / Skip / watch) ---------- */
+/* ---------- signals ---------- */
 function logSignal(action, item, extra = {}) {
   try {
     const key = 'station-one-signals';
     const all = JSON.parse(localStorage.getItem(key) || '[]');
     all.push({ action, item: item.id, ts: Date.now(), ...extra });
     localStorage.setItem(key, JSON.stringify(all.slice(-500)));
-  } catch (e) { /* private mode: signals are best-effort */ }
+  } catch (e) {}
+  postSignal({
+    session_id: SESSION,
+    item_id: String(item.id),
+    action: action === 'unlove' ? 'unlove' : action,
+    offset_seconds: extra.offset ?? null,
+  });
 }
 const lovedSet = () => {
   try { return new Set(JSON.parse(localStorage.getItem('station-one-loved') || '[]')); }
@@ -341,26 +354,14 @@ function watchProgress(item, getTime) {
     $('progressBar').style.transform = 'scaleX(' + pct + ')';
     const left = Math.max(0, item.slot - t);
     $('nowTime').textContent = fmtMin(left) + ' left';
-    // slot ended but media is longer than the slot: keep linear time honest
     if (t >= item.slot) endOfItem(item);
   }, 1000);
 }
 
 function endOfItem(item, errored = false) {
-  if (breakTimer) return; // already in a break
+  if (breakTimer) return;
   clearInterval(progressTimer);
-  // resync local drift: next item starts NOW
-  const pos = livePosition();
-  const { index, offset } = locate(pos);
-  let nextIndex, drift;
-  if (index === currentIndex) {
-    // media ended before its slot did: pull the schedule forward locally
-    nextIndex = (currentIndex + 1) % PROGRAMME.length;
-    drift = PROGRAMME[currentIndex].slot - offset;
-  } else {
-    nextIndex = index; // wall clock already moved on
-    drift = 0;
-  }
+  const { nextIndex, drift } = resolveAdvance(PROGRAMME, currentIndex, livePosition());
   localOffset += drift;
   stationBreak(nextIndex, errored);
 }
@@ -403,7 +404,8 @@ function updateMeta(item, offset) {
 function renderGuide() {
   const list = $('guideList');
   list.replaceChildren();
-  for (let k = 0; k < 4; k++) {
+  const count = Math.min(4, PROGRAMME.length);
+  for (let k = 0; k < count; k++) {
     const idx = (currentIndex + k) % PROGRAMME.length;
     const item = PROGRAMME[idx];
     const row = document.createElement('div');
@@ -412,7 +414,7 @@ function renderGuide() {
     const when = k === 0 ? 'Now' : fmtClock(slotStartClock(currentIndex + k));
     row.innerHTML =
       '<span class="time">' + when + '</span>' +
-      '<span class="thumb ' + item.thumb + '" aria-hidden="true"></span>' +
+      '<span class="thumb ' + (item.thumb || 'thumb-a') + '" aria-hidden="true"></span>' +
       '<span class="meta"><span class="title"></span>' +
       '<span class="sub"><span class="badge' + (item.type === 'station' ? ' station' : '') + '">' +
       (item.type === 'youtube' ? 'YouTube' : 'Station') + '</span></span></span>';
@@ -439,10 +441,13 @@ function refreshTunein() {
   $('tuneinBadge').className = 'badge' + (item.type === 'station' ? ' station' : '');
   $('tuneinSub').textContent = item.block + ' · ' + fmtMin(item.slot - offset) + ' left';
 }
+
+const ready = loadProgramme().then(refreshTunein);
 refreshTunein();
 setInterval(() => { if ($('viewTunein').style.display !== 'none') refreshTunein(); }, 30000);
 
-$('btnTunein').addEventListener('click', () => {
+$('btnTunein').addEventListener('click', async () => {
+  await ready;
   $('viewTunein').style.display = 'none';
   $('viewPlayer').style.display = 'block';
   const { index, offset } = locate(livePosition());
