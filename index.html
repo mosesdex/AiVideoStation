@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Personal Video Station — Deep Research Report</title>
+<meta name="description" content="Comprehensive, fact-checked research on building a personal video station app: an owner-programmed, personalized linear TV channel mixing YouTube and self-hosted video across phone, tablet, and TV.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e11d48'><path d='M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4zm6 3.5 5 3.5-5 3.5v-7z'/></svg>">
+</head>
+<body>
+
+<nav class="nav" aria-label="Sections">
+  <div class="nav-inner">
+    <a class="nav-logo" href="#top">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><polygon points="10 9 15 12 10 15 10 9" fill="#e11d48" stroke="none"/></svg>
+      Personal Video Station
+    </a>
+    <div class="nav-links">
+      <a href="#verdict">Verdict</a>
+      <a href="#market">Market</a>
+      <a href="#idea">The Idea</a>
+      <a href="#features">30 Features</a>
+      <a href="#legal">YouTube Rules</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#money">Monetization</a>
+      <a href="#avoid">What to Avoid</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#sources">Sources</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="kicker">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Deep Research Report · July 2026
+    </div>
+    <h1>Your own TV station, in everyone's pocket — <span class="accent">is it worth building?</span></h1>
+    <p class="sub">A fact-checked deep dive into the "personal video station": an owner-programmed, lean-back linear channel mixing YouTube and self-hosted video, delivered through its own apps on phone, tablet, and TV, learning what each viewer loves along the way.</p>
+    <div class="hero-meta">
+      <span class="chip">21 sources fetched</span>
+      <span class="chip">105 claims extracted</span>
+      <span class="chip">24 claims confirmed 3–0</span>
+      <span class="chip">1 overreach refuted</span>
+      <span class="chip">Primary sources: YouTube ToS, eMarketer, Tunarr, ErsatzTV</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ══════════════ VERDICT ══════════════ -->
+<section id="verdict">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The Verdict</div>
+      <h2>Will it work? Yes, as a focused niche product built the right way.</h2>
+      <p>The behavior you're betting on is real and growing, the differentiation gap you spotted genuinely exists, and the legal path is workable, but only if the product is architected around YouTube's rules from day one.</p>
+    </div>
+    <div class="verdict-grid">
+      <div class="verdict-card">
+        <div class="v-label">Market demand</div>
+        <div class="v-value good">Validated</div>
+        <p>Lean-back linear streaming is mainstream: FAST is forecast at <strong>131.4M US users in 2026</strong> (54% of all connected-TV users), with 1.8B monthly hours watched, up 43% year over year.</p>
+      </div>
+      <div class="verdict-card">
+        <div class="v-label">Differentiation</div>
+        <div class="v-value good">Real gap</div>
+        <p>Existing tools (Tunarr, ErsatzTV, dizqueTV) prove the concept but <strong>none ship their own apps</strong>, none mix YouTube, and none personalize per viewer. Your three pillars are exactly what's missing.</p>
+      </div>
+      <div class="verdict-card">
+        <div class="v-label">Legal feasibility</div>
+        <div class="v-value warn">Constrained</div>
+        <p>YouTube content is playable <strong>only via the official embedded player</strong>, ungated and un-monetized. The rules shape your UX, data, and business model; they don't kill the idea.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>The one-sentence strategy</h3>
+      <p>Don't try to out-content Pluto TV or out-YouTube YouTube. Win by being the <strong>only product with first-party apps, per-viewer taste learning, and a compliant mix of YouTube + your own server video</strong>, monetized through your app's features, never through YouTube's content.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ MARKET ══════════════ -->
+<section id="market">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Market Landscape</div>
+      <h2>Crowded on both flanks, with a hole in the middle</h2>
+      <p>Two very different families of products surround this idea. Giant ad-supported FAST platforms own passive linear viewing at scale; open-source hobbyist tools own the "program your own channel" niche. Nobody owns the intersection.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Competitor</th><th>What it is</th><th>Scale / status</th><th>Own apps</th><th>YouTube mix</th><th>Personalizes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>The Roku Channel</td><td>FAST platform, platform-programmed channels</td><td><span class="tag blue">97.3M US viewers</span></td><td><span class="tag green">Yes</span></td><td><span class="tag red">No</span></td><td><span class="tag amber">Platform-level</span></td></tr>
+          <tr><td>Tubi</td><td>FAST platform (Fox)</td><td><span class="tag blue">92.5M US viewers</span></td><td><span class="tag green">Yes</span></td><td><span class="tag red">No</span></td><td><span class="tag amber">Platform-level</span></td></tr>
+          <tr><td>Pluto TV</td><td>FAST platform (Paramount), cable-style EPG</td><td><span class="tag blue">68.6M US viewers</span></td><td><span class="tag green">Yes</span></td><td><span class="tag red">No</span></td><td><span class="tag amber">Platform-level</span></td></tr>
+          <tr><td>Tunarr</td><td>Open-source: linear channels from Plex/Jellyfin/Emby</td><td><span class="tag green">Active, free</span></td><td><span class="tag red">No (HDHomeRun spoof / M3U)</span></td><td><span class="tag red">No</span></td><td><span class="tag red">No</span></td></tr>
+          <tr><td>ErsatzTV</td><td>Open-source: custom TV channels from personal media</td><td><span class="tag green">Active, free</span></td><td><span class="tag red">No (M3U/XMLTV middleware)</span></td><td><span class="tag red">No</span></td><td><span class="tag red">No</span></td></tr>
+          <tr><td>dizqueTV</td><td>Open-source: live channels from Plex</td><td><span class="tag amber">Older; Tunarr is its rewrite</span></td><td><span class="tag red">No (spoofed tuner / IPTV apps)</span></td><td><span class="tag red">No</span></td><td><span class="tag red">No</span></td></tr>
+          <tr><td>Plex / Jellyfin / Emby</td><td>Personal media servers with client apps</td><td><span class="tag green">Dominant self-host ecosystem</span></td><td><span class="tag green">Yes</span></td><td><span class="tag red">No</span></td><td><span class="tag amber">Basic recs</span></td></tr>
+          <tr><td>ContentWise (B2B)</td><td>Sells personalized linear channels to TV operators</td><td><span class="tag blue">Enterprise only</span></td><td><span class="tag red">N/A</span></td><td><span class="tag red">No</span></td><td><span class="tag green">Yes (proves the tech)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid-2" style="margin-top:24px">
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Why the market timing is good</h3>
+        <ul>
+          <li><strong>Lean-back is back:</strong> viewers overwhelmed by choice increasingly prefer "just turn it on" linear experiences, the exact behavior your station serves.</li>
+          <li><strong>~1,870 FAST channels</strong> operate globally across 21 countries: the format is proven, but every one of them is programmed by a corporation, not a person.</li>
+          <li><strong>Personalized linear channels</strong> are already sold as enterprise tech (ContentWise). The concept works; nobody has productized it for individuals.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>The honest caveats</h3>
+        <ul>
+          <li>You <strong>cannot compete on content volume</strong>: Roku, Tubi and Pluto together take 5.7% of all US TV viewing. Differentiate on ownership, curation, personalization.</li>
+          <li>No study directly measures <strong>willingness to pay</strong> for personally-curated linear channels. Validate demand cheaply before heavy build (see Roadmap).</li>
+          <li>The open-source tools are <strong>free</strong>, and power users will compare. Your edge must be the apps, polish, and the parts they can't do (YouTube + personalization).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ THE IDEA ══════════════ -->
+<section id="idea">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The Idea, Assessed</div>
+      <h2>Is it a good idea? What makes it a <em>first</em>?</h2>
+      <p>Verified against what actually exists in July 2026, the claim "no station like this has its own app" holds up better than most founder claims do.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>Pillar 1: First-party apps</h3>
+        <p>Every self-hosted channel tool today makes you watch through <strong>someone else's player</strong> (Plex, Jellyfin, TiviMate, VLC) via spoofed tuners or M3U playlists. A polished, dedicated app on phone, tablet, and TV is a genuine first in this niche, verified 3–0 against all three incumbents' documentation.</p>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Pillar 2: Owner programming</h3>
+        <p>You set the programme like a real station director: schedules, blocks, filler, dayparts. This is the proven part (Tunarr and ErsatzTV validate the desire), but pairing it with compliantly embedded YouTube sources is something <strong>none of them do</strong>.</p>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>Pillar 3: Taste learning</h3>
+        <p>The station personalizes itself per viewer inside the owner's programme, reordering smart blocks rather than replacing the schedule. Enterprise vendors prove the tech works for linear TV; <strong>no consumer personal-station product does it</strong>.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>The "sufficient independent value" test: your idea passes it, and must keep passing it</h3>
+      <p>YouTube's policies require apps to add real value beyond YouTube itself and forbid "re-creating YouTube." Your linear-channel format, self-hosted mixing, owner scheduling, and personalization are exactly the kind of independent value the policy contemplates, <strong>as long as the product never degrades into "a YouTube playlist player."</strong> Keep the station identity front and center.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FEATURES ══════════════ -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Product Blueprint</div>
+      <h2>30 features, grouped and prioritized</h2>
+      <p>Features tagged <span class="tag green">MVP</span> form the smallest product that proves the concept. Everything is designed inside the verified YouTube constraints; no feature below violates them.</p>
+    </div>
+
+    <div class="feature-group">
+      <h3>Station programming: the owner's control room</h3>
+      <div class="features">
+        <div class="feature"><div class="num">1</div><div><h4>Drag-and-drop programme scheduler<span class="mvp">MVP</span></h4><p>Build a broadcast day on a timeline grid: drop videos into slots, see the full week at a glance, publish instantly to all viewers.</p></div></div>
+        <div class="feature"><div class="num">2</div><div><h4>Mixed-source lineup, clearly labeled<span class="mvp">MVP</span></h4><p>Mix YouTube videos and your server's video in one programme, with visible source badges (which YouTube's policies require anyway).</p></div></div>
+        <div class="feature"><div class="num">3</div><div><h4>Channel blocks &amp; dayparting</h4><p>Morning show, lunch loop, prime time, late night: named blocks with their own mood, rules, and content pools.</p></div></div>
+        <div class="feature"><div class="num">4</div><div><h4>Station identity kit</h4><p>Idents, bumpers, intro stingers and branded transitions played between shows (from your server, never overlaid on a YouTube player).</p></div></div>
+        <div class="feature"><div class="num">5</div><div><h4>Recurring schedule templates</h4><p>"Every weekday at 7pm" rules and auto-filling weekly grids so the station runs itself when you're busy.</p></div></div>
+        <div class="feature"><div class="num">6</div><div><h4>Smart blocks</h4><p>Slots you hand over to the engine: you define the pool and rules ("30 min of tech, nothing over 15 min"), it picks per viewer.</p></div></div>
+        <div class="feature"><div class="num">7</div><div><h4>On-air dashboard</h4><p>The owner's master control room: a live view of what's playing for whom, who's tuned in, and what's coming up.</p></div></div>
+        <div class="feature"><div class="num">8</div><div><h4>Multi-channel stations</h4><p>Spin off themed sub-channels (Movies, Music, Kids) under one station brand as your library and audience grow.</p></div></div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <h3>Viewer experience: true lean-back</h3>
+      <div class="features">
+        <div class="feature"><div class="num">9</div><div><h4>One-tap "turn on the TV"<span class="mvp">MVP</span></h4><p>Open the app and the station is already playing, mid-programme, like switching on a real TV. Zero browsing required.</p></div></div>
+        <div class="feature"><div class="num">10</div><div><h4>TV-style programme guide<span class="mvp">MVP</span></h4><p>A now/next EPG rendered beside or below the player, never on top of a YouTube embed (which is prohibited).</p></div></div>
+        <div class="feature"><div class="num">11</div><div><h4>Channel surfing</h4><p>Flick up/down to hop between channels with instant-start previews, recreating the joy of channel flipping.</p></div></div>
+        <div class="feature"><div class="num">12</div><div><h4>Join-live or start-over</h4><p>Tune in mid-show like real TV, or tap once to restart the current programme from the beginning.</p></div></div>
+        <div class="feature"><div class="num">13</div><div><h4>Love / Skip feedback<span class="mvp">MVP</span></h4><p>Two-button reactions beside the player: the primary explicit signal feeding personalization, placed outside the video surface.</p></div></div>
+        <div class="feature"><div class="num">14</div><div><h4>Watch-together rooms</h4><p>Synced viewing with friends: everyone sees the same programme moment, with a lightweight reaction lane.</p></div></div>
+        <div class="feature"><div class="num">15</div><div><h4>Sleep timer &amp; session limits</h4><p>Classic TV sleep timer plus optional healthy-viewing budgets, a trust feature the big platforms won't build.</p></div></div>
+        <div class="feature"><div class="num">16</div><div><h4>Picture-in-picture (server content)</h4><p>Keep your own hosted video playing in PiP while browsing the guide. Disabled for YouTube segments; background or PiP play of embeds violates policy.</p></div></div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <h3>Personalization: the station that learns you</h3>
+      <div class="features">
+        <div class="feature"><div class="num">17</div><div><h4>Per-viewer taste profile<span class="mvp">MVP</span></h4><p>Each viewer gets their own evolving profile; the same station plays differently for different people, within the owner's programme.</p></div></div>
+        <div class="feature"><div class="num">18</div><div><h4>Cold-start onboarding</h4><p>A 30-second "what do you like?" picker seeds the profile before any watch history exists. This is the standard fix for day-one blandness.</p></div></div>
+        <div class="feature"><div class="num">19</div><div><h4>Implicit signal engine</h4><p>Watch-through rate, skips, replays, and time-of-day patterns, with duration-bias correction so the model doesn't just favor short videos (a documented failure mode).</p></div></div>
+        <div class="feature"><div class="num">20</div><div><h4>Personalized smart-block ordering</h4><p>Within owner-defined blocks, the engine reorders and selects per viewer: curation stays human, sequencing gets smart.</p></div></div>
+        <div class="feature"><div class="num">21</div><div><h4>"Why this is playing" panel</h4><p>One tap explains every pick ("you finished 3 similar videos this week"). Transparency builds the trust Big Streaming lacks.</p></div></div>
+        <div class="feature"><div class="num">22</div><div><h4>Household profiles &amp; kids mode</h4><p>Per-person profiles on shared TVs, plus a locked-down kids channel with owner-approved content only.</p></div></div>
+        <div class="feature"><div class="num">23</div><div><h4>Compliance-by-design data layer</h4><p>YouTube metadata auto-refreshes or deletes on the mandated 30-day cycle; taste models are built to survive that churn (see Architecture).</p></div></div>
+      </div>
+    </div>
+
+    <div class="feature-group">
+      <h3>Platform &amp; infrastructure</h3>
+      <div class="features">
+        <div class="feature"><div class="num">24</div><div><h4>Cross-platform apps from one codebase<span class="mvp">MVP</span></h4><p>iOS, Android, Apple TV, and Android TV via React Native + the react-native-tvos fork: one team, five screens.</p></div></div>
+        <div class="feature"><div class="num">25</div><div><h4>Remote-first TV navigation</h4><p>D-pad spatial navigation and focus management (react-tv-space-navigation) so the TV app feels native, not like a ported phone app.</p></div></div>
+        <div class="feature"><div class="num">26</div><div><h4>Adaptive streaming for your server<span class="mvp">MVP</span></h4><p>HLS with adaptive bitrate for all self-hosted content, so it plays smoothly from phones on LTE to 4K TVs.</p></div></div>
+        <div class="feature"><div class="num">27</div><div><h4>Plex / Jellyfin / Emby import</h4><p>Point the station at an existing media server and inherit its library and metadata: instant content for the huge self-hosting community.</p></div></div>
+        <div class="feature"><div class="num">28</div><div><h4>Cast &amp; AirPlay (server content)</h4><p>Fling your own hosted video to any Chromecast or AirPlay target; YouTube segments hand off to YouTube's own cast flow.</p></div></div>
+        <div class="feature"><div class="num">29</div><div><h4>Offline mode (server content only)</h4><p>Download owner-hosted shows for flights and commutes. YouTube content is never cached or downloaded; that's a hard ToS line.</p></div></div>
+        <div class="feature"><div class="num">30</div><div><h4>Owner analytics</h4><p>Tune-in curves, retention per slot, block performance: the ratings dashboard every real station director wants.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ LEGAL ══════════════ -->
+<section id="legal">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The Rules of the Game</div>
+      <h2>YouTube's terms: what you can and cannot do</h2>
+      <p>Every rule below was verified verbatim against Google's current policy documents (ToS last updated April 2026) with unanimous 3–0 adversarial verification. These are contractual constraints: breaking them terminates your API access.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Allowed: your compliant playbook</h3>
+        <ul>
+          <li><strong>Official embedded player</strong> with documented parameters (autoplay, playlists, queued video IDs): a full-screen player auto-advancing through your curated lineup is supported and compliant.</li>
+          <li><strong>UI beside and around the player:</strong> guides, now-playing info, reactions, channel branding, anywhere except on top of the video surface.</li>
+          <li><strong>Permitted playback-control overlays</strong> (play/pause/mute/fullscreen) where they don't conflict with YouTube's UI. The claim that all custom chrome is banned was refuted 0–3.</li>
+          <li><strong>Destroy-on-end trick:</strong> tear down the player the instant a video ends to skip YouTube's end screens and jump to your next programme item.</li>
+          <li><strong>Charging for your app's own features</strong> (apps, personalization, server-video tools) while YouTube playback stays free.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Prohibited: the hard lines</h3>
+        <ul>
+          <li><strong>No re-streaming, proxying, downloading, caching, or transcoding</strong> YouTube video. Server-side channel stitching is foreclosed for the YouTube half of your programme.</li>
+          <li><strong>No overlays on the player:</strong> no channel bug, EPG, or chyron over any part of a YouTube embed.</li>
+          <li><strong>No background or off-screen playback:</strong> the player must be on the visible screen.</li>
+          <li><strong>No charging to watch YouTube content</strong> and no gating beyond the play button.</li>
+          <li><strong>No blocking, modifying, or replacing YouTube's ads</strong>; no selling your own ads on screens showing YouTube data (without sufficient independent content).</li>
+          <li><strong>No durable hoarding of YouTube data:</strong> stored API data must be refreshed or deleted every 30 days, and deleted entirely if the agreement ends.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>What this means for your architecture</h3>
+      <p>Your station needs a <strong>dual-engine player</strong>: server-side or client-side stitched HLS for your own content, and the official YouTube embedded player (client-side, visible, unmodified) for YouTube segments. The app choreographs the handoff between the two so it still <em>feels</em> like one continuous channel.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ARCHITECTURE ══════════════ -->
+<section id="architecture">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">How to Build It</div>
+      <h2>Recommended architecture</h2>
+      <p>Grounded in the verified constraints and current cross-platform TV practice. The guiding principle: the self-hosted core must be able to survive even if YouTube access ever disappears.</p>
+    </div>
+    <div class="arch-layers">
+      <div class="arch-layer">
+        <div class="layer-name">Client apps<span>one codebase, five screens</span></div>
+        <div class="layer-body"><strong>React Native + <code>react-native-tvos</code></strong> for iOS, Android, Apple TV, and Android TV (TV support lives in this community fork, not RN core), with <code>react-tv-space-navigation</code> for remote-control focus handling, plus a web app for desktop and instant demos. Ship phone + web first, TV second.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="layer-name">Playback<span>the dual engine</span></div>
+        <div class="layer-body"><strong>Self-hosted:</strong> HLS adaptive streaming through native players (AVPlayer / ExoPlayer). <strong>YouTube:</strong> the official IFrame/embedded player with <code>playlist</code>, <code>autoplay</code> and event APIs, destroyed on the <code>ENDED</code> event to advance the programme. A thin "channel conductor" in the app switches engines seamlessly.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="layer-name">Channel engine<span>the schedule brain</span></div>
+        <div class="layer-body">A server-side schedule service resolves "what is playing on this channel right now for this viewer" and returns a timeline the clients follow. For pure self-hosted channels you can later add true simulated-live output (FFmpeg concat → HLS, or AWS MediaTailor Channel Assembly, which builds linear channels from VOD via manifest manipulation with no re-encoding). YouTube segments always resolve client-side.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="layer-name">Media backend<span>your server, leveled up</span></div>
+        <div class="layer-body">FFmpeg transcoding pipeline producing HLS renditions of your uploads; optional <strong>Plex/Jellyfin/Emby import adapters</strong> to inherit existing libraries. Store originals + renditions on object storage (S3/B2) with a CDN in front for TV-grade delivery.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="layer-name">Personalization<span>learn within the rules</span></div>
+        <div class="layer-body">Event pipeline (plays, watch-through, skips, loves, time-of-day) feeding viewer taste vectors built on <strong>content-based embeddings</strong> (genre, topic, duration, transcript) rather than pure collaborative filtering. This solves cold start with few users <em>and</em> keeps models robust when YouTube metadata is purged on the 30-day cycle, since taste lives in your own derived features, not hoarded API data. Correct for duration bias explicitly.</div>
+      </div>
+      <div class="arch-layer">
+        <div class="layer-name">Data &amp; accounts<span>keep it boring</span></div>
+        <div class="layer-body">Postgres (e.g. Supabase) for schedules, channels, profiles, and events; auth with household profiles; a scheduled job enforcing the YouTube 30-day refresh-or-delete rule as a first-class system feature, not an afterthought.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ MONETIZATION ══════════════ -->
+<section id="money">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Monetization</div>
+      <h2>Charge for the station, never for the content you don't own</h2>
+      <p>YouTube's rules eliminate the two lazy business models: paywalling YouTube playback and running your own ads against it. What's left is actually a cleaner business.</p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>Free tier</h3>
+        <p>One channel, core lean-back viewing, basic scheduling. YouTube playback always free and ungated (required). This tier is your growth engine and keeps you compliant by default.</p>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Station Pro (subscription)</h3>
+        <p>Charge for what's yours: personalization engine, multi-channel, household profiles, analytics, TV apps, offline downloads of server content, watch-together. This is the explicitly compliant path the policies leave open.</p>
+      </div>
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Later: stations-as-a-service</h3>
+        <p>Let other curators run their own branded stations on your platform (creator tier / white-label). ContentWise proves operators pay for personalized linear tech; you'd be the indie version.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <h3>The two rules that keep the money legal</h3>
+      <p><strong>1.</strong> Nothing a viewer pays you may ever be a condition for watching a YouTube video. <strong>2.</strong> YouTube's own ads play untouched inside embeds, and you sell no advertising on YouTube-content screens. Price the product so those rules never hurt: the value is the station experience, not the videos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ AVOID ══════════════ -->
+<section id="avoid">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Risks &amp; Anti-patterns</div>
+      <h2>What to avoid, ranked by how fast it kills you</h2>
+    </div>
+    <div class="risk">
+      <div class="sev high">Fatal</div>
+      <div><h4>Downloading, re-streaming, or server-stitching YouTube video</h4><p>Tools like yt-dlp make it tempting to grab videos and stitch one clean channel stream. This simultaneously breaches YouTube's ToS (contract termination) and copyright law (statutory damages). <strong>There is no version of this product where that's OK.</strong> The embedded player is the only path.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev high">Fatal</div>
+      <div><h4>Monetizing against YouTube content</h4><p>Paywalling YouTube playback, injecting your own ads, or stripping YouTube's ads each independently violates verified policy clauses. Build the business model on your own features from day one so compliance is structural, not a patch.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev high">High</div>
+      <div><h4>Becoming "a YouTube app with extra steps"</h4><p>If the station is 95% YouTube content in a slightly different shell, you fail the "don't re-create YouTube / add independent value" test and YouTube can cut you off at its discretion. Keep self-hosted content, scheduling identity, and personalization visibly central.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev med">Medium</div>
+      <div><h4>Betting the whole product on YouTube's continued goodwill</h4><p>Google revises its terms regularly (last change April 2026) and can terminate access unilaterally; enforcement at scale is an open question. <strong>Mitigation:</strong> architect so the self-hosted station works fully without YouTube; treat YouTube as an enrichment layer.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev med">Medium</div>
+      <div><h4>Silently commingling sources</h4><p>Showing YouTube and server content in one guide without clear labeling violates the commingling rules. The fix is cheap (visible source badges) but it must be designed in, not bolted on.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev med">Medium</div>
+      <div><h4>Promising every TV platform on day one</h4><p>Apple TV and Android TV have a solid shared-codebase path; <strong>Roku and Fire TV do not have a clear supported path for compliant YouTube embeds</strong> (an open question from this research). Ship phone + web + the two major TV OSes first; investigate Roku/Fire TV before promising them.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev low">Low</div>
+      <div><h4>Small UX landmines</h4><p>Browser autoplay policies require muted start or a user gesture on first play. Related-video suggestions can't be fully disabled (rel=0 only limits them to the same channel); mitigate by destroying the player on end. Keep every embed at least 200×200px (480×270 recommended). Annoyances, not blockers: design around them early.</p></div>
+    </div>
+    <div class="risk">
+      <div class="sev low">Low</div>
+      <div><h4>Classic startup traps for this category</h4><p>Competing with FAST giants on content volume, building DRM before anyone's paying, over-engineering simulated-live infrastructure before validating demand, and skipping the cheap validation step (see Roadmap Phase 0).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ROADMAP ══════════════ -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Build Order</div>
+      <h2>A staged roadmap that de-risks as it goes</h2>
+    </div>
+    <div class="roadmap">
+      <div class="phase">
+        <div class="phase-label">Phase 0 · ~2–4 weeks</div>
+        <h3>Validate before you build</h3>
+        <p>The research confirmed the market and the gap, but not willingness to pay. Close that gap cheaply:</p>
+        <ul>
+          <li>Landing page + waitlist pitching "your own TV station with its own app."</li>
+          <li>A web-only prototype: one channel, YouTube IFrame playlist + a few HLS videos, auto-advancing.</li>
+          <li>Put it in front of two audiences: self-hosting communities (r/selfhosted, Plex/Jellyfin forums) and curator/creator communities.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-label">Phase 1 · ~2–3 months</div>
+        <h3>MVP: the living channel</h3>
+        <ul>
+          <li>Web + phone apps (React Native), one channel per station.</li>
+          <li>Drag-and-drop scheduler, mixed labeled sources, one-tap tune-in, now/next guide.</li>
+          <li>Love/Skip signals recorded from day one (the data moat starts here), HLS pipeline for uploads.</li>
+          <li>Compliance built in: source badges, ungated playback, 30-day data job.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-label">Phase 2 · ~3 months</div>
+        <h3>The TV moment + the learning station</h3>
+        <ul>
+          <li>Apple TV and Android TV apps via react-native-tvos with proper D-pad navigation.</li>
+          <li>Personalization v1: content-embedding taste profiles, smart-block reordering, cold-start picker, "why this is playing."</li>
+          <li>Plex/Jellyfin import; household profiles.</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="phase-label">Phase 3 · ongoing</div>
+        <h3>Deepen and monetize</h3>
+        <ul>
+          <li>Station Pro subscription; multi-channel; owner analytics; watch-together; kids mode.</li>
+          <li>Investigate Roku/Fire TV feasibility and true simulated-live for self-hosted channels (FFmpeg/MediaTailor).</li>
+          <li>Explore stations-as-a-service for other curators.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ OPEN QUESTIONS ══════════════ -->
+<section id="questions">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Honest Unknowns</div>
+      <h2>Open questions the research couldn't close</h2>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Demand &amp; pricing</h3><p>Is there measurable willingness-to-pay for <em>personally</em>-curated linear channels, and how big is the overlap between self-hosting enthusiasts and lean-back viewers? Phase 0 exists to answer this.</p></div>
+      <div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>YouTube's posture at scale</h3><p>Would YouTube approve quota increases and tolerate a linear-TV-style client as it grows? The independent-value standard is enforced at Google's discretion; build the YouTube layer as detachable.</p></div>
+      <div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Models vs. the 30-day rule</h3><p>Can derived taste-model weights be lawfully retained after underlying YouTube metadata is deleted? The content-embedding architecture recommended here minimizes exposure, but get real legal advice before scaling.</p></div>
+      <div class="card"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Roku &amp; Fire TV</h3><p>WebView-based embeds are often restricted on TV platforms. Does compliant YouTube playback even have a supported path on Roku/Fire TV? Needs a technical spike before those platforms are promised.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ SOURCES ══════════════ -->
+<section id="sources" class="sources">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Evidence</div>
+      <h2>Sources</h2>
+      <p>21 sources fetched; 105 claims extracted; the top 25 claims each verified by three independent adversarial passes (24 confirmed 3–0, 1 refuted 0–3). Key sources:</p>
+    </div>
+    <ol>
+      <li><a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" rel="noopener">YouTube API Services · Terms of Service</a> (primary; updated 2026-04-28)</li>
+      <li><a href="https://developers.google.com/youtube/terms/developer-policies" rel="noopener">YouTube API Services · Developer Policies</a> (primary)</li>
+      <li><a href="https://developers.google.com/youtube/terms/required-minimum-functionality" rel="noopener">YouTube · Required Minimum Functionality</a> (primary)</li>
+      <li><a href="https://developers.google.com/youtube/terms/developer-policies-guide" rel="noopener">YouTube · Developer Policies Guide</a> (primary)</li>
+      <li><a href="https://developers.google.com/youtube/player_parameters" rel="noopener">YouTube IFrame Player Parameters</a> (primary)</li>
+      <li><a href="https://www.emarketer.com/content/faq-on-fast--how-free-streaming-tv-reshaping-ad-market-2026" rel="noopener">eMarketer · FAQ on FAST (2026)</a> (primary research)</li>
+      <li><a href="https://tunarr.com/" rel="noopener">Tunarr</a> + <a href="https://tunarr.com/configure/clients/" rel="noopener">client docs</a> (primary)</li>
+      <li><a href="https://ersatztv.org/" rel="noopener">ErsatzTV</a> + <a href="https://ersatztv.org/docs/clients/" rel="noopener">client docs</a> (primary)</li>
+      <li><a href="https://github.com/vexorian/dizquetv" rel="noopener">dizqueTV (GitHub)</a> (primary)</li>
+      <li><a href="https://www.mux.com/blog/simulate-a-live-stream-of-a-video-playlist-with-ffmpeg" rel="noopener">Mux · Simulate a live stream with FFmpeg</a></li>
+      <li><a href="https://aws.amazon.com/blogs/media/schedule-live-linear-channel-playout-using-aws-elemental-mediatailor" rel="noopener">AWS · Linear channel playout with MediaTailor</a> (primary)</li>
+      <li><a href="https://www.callstack.com/blog/cross-platform-tv-apps-with-react-native-for-tvos-android-tv-and-tizen" rel="noopener">Callstack · Cross-platform TV apps with React Native</a></li>
+      <li><a href="https://blog.logrocket.com/developing-cross-platform-tv-app-react-native/" rel="noopener">LogRocket · Cross-platform TV apps</a></li>
+      <li><a href="https://noriginmedia.com/what-video-players-are-best-for-smart-tv-apps/" rel="noopener">Norigin Media · Video players for Smart TV apps</a></li>
+      <li><a href="https://arxiv.org/html/2507.19346" rel="noopener">arXiv · Short-form video recs with multimodal embeddings (cold-start, duration bias)</a> (primary)</li>
+      <li><a href="https://www.contentwise.com/solutions/contentwise-personalized-linear-channels/" rel="noopener">ContentWise · Personalized Linear Channels</a> (primary)</li>
+      <li><a href="https://ottverse.com/overcoming-choice-paralysis-tv-channel-personalization/" rel="noopener">OTTVerse · Choice paralysis &amp; TV personalization</a></li>
+      <li><a href="https://www.newscaststudio.com/2025/11/07/analysis-fast-free-streaming-data-television-future-viewer-fragmentation/" rel="noopener">NewscastStudio · FAST &amp; viewer fragmentation</a></li>
+      <li><a href="https://www.hollywoodreporter.com/business/business-news/streaming-profits-movie-tv-platforms-1235932799/" rel="noopener">The Hollywood Reporter · Streaming profits</a></li>
+      <li><a href="https://www.blog.brightcoding.dev/2025/10/04/turn-your-media-library-into-live-tv-channels-with-custom-schedules-and-streaming-the-magic-of-ersatztv/" rel="noopener">BrightCoding · ErsatzTV walkthrough</a></li>
+      <li><a href="https://github.com/PierfrancescoSoffritti/android-youtube-player/issues/243" rel="noopener">android-youtube-player #243 · ToS discussion</a></li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Research compiled July 2026 via multi-agent web research with 3-vote adversarial claim verification. Policy analysis is not legal advice: consult a lawyer before launch. Market figures are third-party forecasts and estimates.</p>
+  </div>
+</footer>
+
+</body>
+</html>
