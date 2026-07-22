@@ -87,3 +87,34 @@ test('explain falls back to the owner-programmed message with no signals', () =>
   const t = buildTaste([], ITEMS);
   assert.match(explain(t, ITEMS.bbb).join(' '), /programmed/i);
 });
+
+test('seed tags boost matching tags and are recorded as seeds', () => {
+  const t = buildTaste([], ITEMS, ['retro', 'music']);
+  assert.ok(t.tags.retro > 0);
+  assert.ok(t.tags.music > 0);
+  assert.ok(t.seeds.has('retro'));
+});
+
+test('seeded taste reorders scoring in favor of matching items', () => {
+  const t = buildTaste([], ITEMS, ['retro']);
+  assert.ok(scoreItem(t, ITEMS.rick) > scoreItem(t, ITEMS.psy));
+});
+
+test('real signals outweigh a seed pointing the other way', () => {
+  // seeded retro, but the viewer then loved psy (dance) and skipped rick (retro)
+  const t = buildTaste([
+    { action: 'love', item: 'psy' },
+    { action: 'skip', item: 'rick' },
+  ], ITEMS, ['retro']);
+  assert.ok(scoreItem(t, ITEMS.psy) > scoreItem(t, ITEMS.rick));
+});
+
+test('explain says "you said you enjoy" for a purely seeded tag', () => {
+  const t = buildTaste([], ITEMS, ['retro']);
+  assert.match(explain(t, ITEMS.rick).join(' '), /you said you enjoy retro/i);
+});
+
+test('explain switches to watch-history phrasing once real signals back the tag', () => {
+  const t = buildTaste([{ action: 'love', item: 'rick' }], ITEMS, ['retro']);
+  assert.match(explain(t, ITEMS.psy).join(' '), /you watch a lot of/i);
+});

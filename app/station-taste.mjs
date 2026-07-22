@@ -12,11 +12,14 @@
 const W_LOVE = 3;
 const W_SKIP = -2;
 const W_FINISH = 1;
+const W_SEED = 2;
 const FINISH_MIN_RATIO = 0.7;
 
-export function buildTaste(events, itemsById) {
-  const taste = { items: {}, tags: {}, blocks: {} };
+/* seedTags: onboarding picks — a gentle prior that real behavior outweighs */
+export function buildTaste(events, itemsById, seedTags = []) {
+  const taste = { items: {}, tags: {}, blocks: {}, seeds: new Set(seedTags) };
   const add = (bag, key, w) => { if (key) bag[key] = (bag[key] || 0) + w; };
+  for (const tag of seedTags) add(taste.tags, tag, W_SEED);
   for (const ev of events) {
     const item = itemsById[ev.item];
     if (!item) continue;
@@ -71,7 +74,9 @@ export function explain(taste, item) {
     .filter(t => t.score !== 0)
     .sort((a, b) => b.score - a.score);
   if (tagScores.length && tagScores[0].score > 0) {
-    reasons.push(`You watch a lot of ${tagScores[0].tag}.`);
+    const top = tagScores[0];
+    const purelySeeded = taste.seeds?.has(top.tag) && top.score <= 2;
+    reasons.push(purelySeeded ? `You said you enjoy ${top.tag}.` : `You watch a lot of ${top.tag}.`);
   } else if (tagScores.length && tagScores[tagScores.length - 1].score < 0) {
     reasons.push(`You usually pass on ${tagScores[tagScores.length - 1].tag}.`);
   }

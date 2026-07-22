@@ -30,7 +30,21 @@
     margin-top: 12px; display: flex; align-items: center; gap: 10px; justify-content: center;
     font-size: 14px; color: var(--ink-muted);
   }
+  .taste-picker { margin-top: 40px; max-width: 460px; }
+  .taste-picker .tp-label { font-size: 14px; color: var(--ink-muted); }
+  .taste-picker .tp-chips {
+    margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  }
+  .tp-chip {
+    font-size: 13.5px; font-weight: 500; color: var(--ink);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 7px 16px;
+    transition: background 150ms var(--ease), border-color 150ms var(--ease);
+  }
+  .tp-chip:hover { background: var(--surface-2); }
+  .tp-chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .tunein-card .tune-btn { margin-top: 40px; }
+  .taste-picker:not([hidden]) + .tune-btn { margin-top: 28px; }
   .tunein-card .credit { margin-top: 56px; font-size: 13px; color: var(--ink-muted); }
 
   /* ---- Player view ---- */
@@ -137,6 +151,10 @@
       <span class="badge" id="tuneinBadge">YouTube</span>
       <span id="tuneinSub">…</span>
     </div>
+    <section class="taste-picker" id="tastePicker" hidden aria-label="Tell the station what you enjoy">
+      <p class="tp-label">First visit? Tap what you enjoy — the station tunes itself to you. (Optional)</p>
+      <div class="tp-chips" id="tasteChips"></div>
+    </section>
     <button class="btn btn-primary tune-btn" id="btnTunein">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
       Tune in
@@ -237,6 +255,7 @@ const FALLBACK = [
     title: 'Late Night Music: Never Gonna Give You Up', block: 'Late Night Block', thumb: 'thumb-e' },
 ];
 
+let RAW = FALLBACK;
 let PROGRAMME = FALLBACK;
 let TOTAL = totalSeconds(PROGRAMME);
 let ANCHOR = Date.UTC(2026, 0, 1);
@@ -271,9 +290,14 @@ function localEvents() {
   catch (e) { return []; }
 }
 
+function seedTags() {
+  try { return JSON.parse(localStorage.getItem('station-one-seed-tags') || '[]'); }
+  catch (e) { return []; }
+}
+
 function applyTaste(items) {
   const byId = Object.fromEntries(items.map(i => [i.id, i]));
-  TASTE = buildTaste(localEvents(), byId);
+  TASTE = buildTaste(localEvents(), byId, seedTags());
   const tuned = personalizeProgramme(items, TASTE);
   personalized = tuned.some((it, i) => it.id !== items[i].id);
   return tuned;
@@ -283,14 +307,41 @@ async function loadProgramme() {
   try {
     const [station, rows] = await Promise.all([fetchStation(), fetchProgramme()]);
     if (rows && rows.length) {
-      PROGRAMME = applyTaste(rows.map(mapRow));
-      TOTAL = totalSeconds(PROGRAMME);
+      RAW = rows.map(mapRow);
       ANCHOR = Number(station.anchor_ms) || ANCHOR;
     }
   } catch (e) {
-    PROGRAMME = applyTaste(PROGRAMME);
     toast('Offline — playing the built-in demo programme');
   }
+  PROGRAMME = applyTaste(RAW);
+  TOTAL = totalSeconds(PROGRAMME);
+  renderPicker();
+}
+
+/* ---------- onboarding taste picker (first visit only) ---------- */
+function renderPicker() {
+  const firstVisit = !localStorage.getItem('station-one-onboarded') && !localEvents().length;
+  if (!firstVisit) return;
+  const tags = [...new Set(RAW.flatMap(i => i.tags || []))].slice(0, 10);
+  if (!tags.length) return;
+  const wrap = $('tasteChips');
+  wrap.replaceChildren();
+  const picked = new Set(seedTags());
+  for (const tag of tags) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'tp-chip' + (picked.has(tag) ? ' on' : '');
+    chip.textContent = tag;
+    chip.setAttribute('aria-pressed', String(picked.has(tag)));
+    chip.addEventListener('click', () => {
+      picked.has(tag) ? picked.delete(tag) : picked.add(tag);
+      chip.classList.toggle('on', picked.has(tag));
+      chip.setAttribute('aria-pressed', String(picked.has(tag)));
+      try { localStorage.setItem('station-one-seed-tags', JSON.stringify([...picked])); } catch (e) {}
+    });
+    wrap.appendChild(chip);
+  }
+  $('tastePicker').hidden = false;
 }
 
 /* ---------- schedule ---------- */
@@ -492,6 +543,8 @@ setInterval(() => { if ($('viewTunein').style.display !== 'none') refreshTunein(
 
 $('btnTunein').addEventListener('click', async () => {
   await ready;
+  try { localStorage.setItem('station-one-onboarded', '1'); } catch (e) {}
+  PROGRAMME = applyTaste(RAW); // fold in any picks made moments ago
   $('viewTunein').style.display = 'none';
   $('viewPlayer').style.display = 'block';
   const { index, offset } = locate(livePosition());
