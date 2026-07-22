@@ -175,12 +175,12 @@
       <div class="features">
         <div class="feature"><div class="num">1</div><div><h4>Drag-and-drop programme scheduler<span class="mvp">MVP</span></h4><p>Build a broadcast day on a timeline grid: drop videos into slots, see the full week at a glance, publish instantly to all viewers.</p></div></div>
         <div class="feature"><div class="num">2</div><div><h4>Mixed-source lineup, clearly labeled<span class="mvp">MVP</span></h4><p>Mix YouTube videos and your server's video in one programme, with visible source badges (which YouTube's policies require anyway).</p></div></div>
-        <div class="feature"><div class="num">3</div><div><h4>Channel blocks &amp; dayparting</h4><p>Morning show, lunch loop, prime time, late night: named blocks with their own mood, rules, and content pools.</p></div></div>
+        <div class="feature"><div class="num">3</div><div><h4>Programme blocks &amp; dayparting</h4><p>Morning show, lunch loop, prime time, late night: named blocks with their own mood, rules, and content pools.</p></div></div>
         <div class="feature"><div class="num">4</div><div><h4>Station identity kit</h4><p>Idents, bumpers, intro stingers and branded transitions played between shows (from your server, never overlaid on a YouTube player).</p></div></div>
         <div class="feature"><div class="num">5</div><div><h4>Recurring schedule templates</h4><p>"Every weekday at 7pm" rules and auto-filling weekly grids so the station runs itself when you're busy.</p></div></div>
         <div class="feature"><div class="num">6</div><div><h4>Smart blocks</h4><p>Slots you hand over to the engine: you define the pool and rules ("30 min of tech, nothing over 15 min"), it picks per viewer.</p></div></div>
         <div class="feature"><div class="num">7</div><div><h4>On-air dashboard</h4><p>The owner's master control room: a live view of what's playing for whom, who's tuned in, and what's coming up.</p></div></div>
-        <div class="feature"><div class="num">8</div><div><h4>Multi-channel stations</h4><p>Spin off themed sub-channels (Movies, Music, Kids) under one station brand as your library and audience grow.</p></div></div>
+        <div class="feature"><div class="num">8</div><div><h4>Viewer requests &amp; votes</h4><p>Let viewers suggest or vote on what the station should air next. Every pick stays subject to your approval, so the programme remains yours.</p></div></div>
       </div>
     </div>
 
@@ -189,7 +189,7 @@
       <div class="features">
         <div class="feature"><div class="num">9</div><div><h4>One-tap "turn on the TV"<span class="mvp">MVP</span></h4><p>Open the app and the station is already playing, mid-programme, like switching on a real TV. Zero browsing required.</p></div></div>
         <div class="feature"><div class="num">10</div><div><h4>TV-style programme guide<span class="mvp">MVP</span></h4><p>A now/next EPG rendered beside or below the player, never on top of a YouTube embed (which is prohibited).</p></div></div>
-        <div class="feature"><div class="num">11</div><div><h4>Channel surfing</h4><p>Flick up/down to hop between channels with instant-start previews, recreating the joy of channel flipping.</p></div></div>
+        <div class="feature"><div class="num">11</div><div><h4>Coming-up reminders</h4><p>Classic TV-style reminders: a nudge when a favorite show or block is about to air, pulling viewers back to the live programme.</p></div></div>
         <div class="feature"><div class="num">12</div><div><h4>Join-live or start-over</h4><p>Tune in mid-show like real TV, or tap once to restart the current programme from the beginning.</p></div></div>
         <div class="feature"><div class="num">13</div><div><h4>Love / Skip feedback<span class="mvp">MVP</span></h4><p>Two-button reactions beside the player: the primary explicit signal feeding personalization, placed outside the video surface.</p></div></div>
         <div class="feature"><div class="num">14</div><div><h4>Watch-together rooms</h4><p>Synced viewing with friends: everyone sees the same programme moment, with a lightweight reaction lane.</p></div></div>
@@ -206,7 +206,7 @@
         <div class="feature"><div class="num">19</div><div><h4>Implicit signal engine</h4><p>Watch-through rate, skips, replays, and time-of-day patterns, with duration-bias correction so the model doesn't just favor short videos (a documented failure mode).</p></div></div>
         <div class="feature"><div class="num">20</div><div><h4>Personalized smart-block ordering</h4><p>Within owner-defined blocks, the engine reorders and selects per viewer: curation stays human, sequencing gets smart.</p></div></div>
         <div class="feature"><div class="num">21</div><div><h4>"Why this is playing" panel</h4><p>One tap explains every pick ("you finished 3 similar videos this week"). Transparency builds the trust Big Streaming lacks.</p></div></div>
-        <div class="feature"><div class="num">22</div><div><h4>Household profiles &amp; kids mode</h4><p>Per-person profiles on shared TVs, plus a locked-down kids channel with owner-approved content only.</p></div></div>
+        <div class="feature"><div class="num">22</div><div><h4>Household profiles &amp; kids mode</h4><p>Per-person profiles on shared TVs, plus a locked-down kids block with owner-approved content only.</p></div></div>
         <div class="feature"><div class="num">23</div><div><h4>Compliance-by-design data layer</h4><p>YouTube metadata auto-refreshes or deletes on the mandated 30-day cycle; taste models are built to survive that churn (see Architecture).</p></div></div>
       </div>
     </div>
@@ -283,7 +283,7 @@
       </div>
       <div class="arch-layer">
         <div class="layer-name">Channel engine<span>the schedule brain</span></div>
-        <div class="layer-body">A server-side schedule service resolves "what is playing on this channel right now for this viewer" and returns a timeline the clients follow. For pure self-hosted channels you can later add true simulated-live output (FFmpeg concat → HLS, or AWS MediaTailor Channel Assembly, which builds linear channels from VOD via manifest manipulation with no re-encoding). YouTube segments always resolve client-side.</div>
+        <div class="layer-body">A server-side schedule service resolves "what is playing on the station right now for this viewer" and returns a timeline the clients follow. For the self-hosted portion of the programme you can later add true simulated-live output (FFmpeg concat → HLS, or AWS MediaTailor Channel Assembly, which builds linear channels from VOD via manifest manipulation with no re-encoding). YouTube segments always resolve client-side.</div>
       </div>
       <div class="arch-layer">
         <div class="layer-name">Media backend<span>your server, leveled up</span></div>
@@ -295,7 +295,7 @@
       </div>
       <div class="arch-layer">
         <div class="layer-name">Data &amp; accounts<span>keep it boring</span></div>
-        <div class="layer-body">Postgres (e.g. Supabase) for schedules, channels, profiles, and events; auth with household profiles; a scheduled job enforcing the YouTube 30-day refresh-or-delete rule as a first-class system feature, not an afterthought.</div>
+        <div class="layer-body">Postgres (e.g. Supabase) for the schedule, programme, profiles, and events; auth with household profiles; a scheduled job enforcing the YouTube 30-day refresh-or-delete rule as a first-class system feature, not an afterthought.</div>
       </div>
     </div>
   </div>
@@ -316,7 +316,7 @@
       </div>
       <div class="card">
         <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Station Pro (subscription)</h3>
-        <p>Charge for what's yours: personalization engine, multi-channel, household profiles, analytics, TV apps, offline downloads of server content, watch-together. This is the explicitly compliant path the policies leave open.</p>
+        <p>Charge for what's yours: personalization engine, household profiles, analytics, TV apps, offline downloads of server content, watch-together. This is the explicitly compliant path the policies leave open.</p>
       </div>
       <div class="card">
         <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Later: stations-as-a-service</h3>
@@ -394,7 +394,7 @@
         <div class="phase-label">Phase 1 · ~2–3 months</div>
         <h3>MVP: the living channel</h3>
         <ul>
-          <li>Web + phone apps (React Native), one channel per station.</li>
+          <li>Web + phone apps (React Native), built around your station's single channel.</li>
           <li>Drag-and-drop scheduler, mixed labeled sources, one-tap tune-in, now/next guide.</li>
           <li>Love/Skip signals recorded from day one (the data moat starts here), HLS pipeline for uploads.</li>
           <li>Compliance built in: source badges, ungated playback, 30-day data job.</li>
@@ -413,8 +413,8 @@
         <div class="phase-label">Phase 3 · ongoing</div>
         <h3>Deepen and monetize</h3>
         <ul>
-          <li>Station Pro subscription; multi-channel; owner analytics; watch-together; kids mode.</li>
-          <li>Investigate Roku/Fire TV feasibility and true simulated-live for self-hosted channels (FFmpeg/MediaTailor).</li>
+          <li>Station Pro subscription; viewer requests &amp; votes; owner analytics; watch-together; kids mode.</li>
+          <li>Investigate Roku/Fire TV feasibility and true simulated-live for the self-hosted programme (FFmpeg/MediaTailor).</li>
           <li>Explore stations-as-a-service for other curators.</li>
         </ul>
       </div>
