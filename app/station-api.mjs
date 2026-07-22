@@ -48,3 +48,7 @@ export function verifyOwnerKey(key) {
 export function saveProgramme(key, items) {
   return rpc('save_programme', { p_key: key, p_items: items });
 }
+
+export function fetchAnalytics(key) {
+  return rpc('get_analytics', { p_key: key });
+}

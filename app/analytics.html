@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — Ratings</title>
+<meta name="description" content="Station One owner analytics: tune-ins, retention, and block performance.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../prototype/station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  /* Chart series colors — validated for dark surface + CVD (dataviz six checks) */
+  :root {
+    --c-tune: #3b82f6;
+    --c-love: #e11d48;
+    --c-skip: #0d9488;
+  }
+  .page { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; gap: 16px; }
+  .topbar .wordmark { font-size: 17px; }
+  .topbar nav { display: flex; gap: 16px; font-size: 13.5px; }
+  .topbar nav a { color: var(--ink-muted); text-decoration: none; }
+  .topbar nav a:hover { color: var(--ink); }
+  .topbar nav .here { color: var(--ink); font-weight: 600; }
+
+  .gate { margin: 12vh auto 0; max-width: 420px; text-align: center; }
+  .gate h1 { font-family: var(--font-identity); font-size: 32px; font-weight: 650; letter-spacing: -0.02em; }
+  .gate p { margin-top: 10px; color: var(--ink-muted); font-size: 15px; }
+  .gate form { margin-top: 28px; display: flex; gap: 10px; }
+  .field {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--ink); font: inherit; font-size: 15px;
+    padding: 12px 14px; min-width: 0;
+  }
+  .field:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .gate .err { margin-top: 12px; font-size: 14px; color: oklch(0.7 0.19 25); min-height: 20px; }
+
+  .dash { display: none; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+  }
+  .tile .t-label { font-size: 12.5px; font-weight: 600; color: var(--ink-muted); }
+  .tile .t-value {
+    margin-top: 6px; font-family: var(--font-identity);
+    font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums;
+  }
+  .tile .t-sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+
+  .panel {
+    margin-top: 20px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+  }
+  .panel h2 { font-size: 15px; font-weight: 600; }
+  .panel .sub { font-size: 13px; color: var(--ink-muted); margin-top: 2px; }
+  .legend { display: flex; gap: 16px; margin-top: 10px; font-size: 13px; color: var(--ink-muted); flex-wrap: wrap; }
+  .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 10px; height: 10px; border-radius: 3px; }
+
+  .chart { margin-top: 16px; }
+  .bars {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 150px; border-bottom: 1px solid var(--border); padding-bottom: 0;
+  }
+  .bcol { flex: 1; display: flex; align-items: flex-end; gap: 2px; height: 100%; min-width: 0; position: relative; }
+  .bar {
+    flex: 1; min-height: 2px; border-radius: 4px 4px 0 0;
+    position: relative; cursor: default;
+  }
+  .bar.zero { background: transparent !important; border-bottom: 2px solid var(--border); border-radius: 0; }
+  .xlabels { display: flex; gap: 3px; margin-top: 6px; }
+  .xlabels span {
+    flex: 1; text-align: center; font-size: 11px; color: var(--ink-muted);
+    font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap;
+  }
+  .peak-label {
+    position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+    font-size: 11.5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+
+  .tooltip {
+    position: fixed; z-index: 50; pointer-events: none;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12.5px;
+    opacity: 0; transition: opacity 120ms var(--ease);
+    max-width: 240px;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-title { font-weight: 600; margin-bottom: 2px; }
+  .tooltip .tt-row { color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+  .tooltip .swatch { width: 8px; height: 8px; border-radius: 2px; }
+
+  details.data-table { margin-top: 12px; font-size: 13px; color: var(--ink-muted); }
+  details.data-table summary { cursor: pointer; }
+  details.data-table table { margin-top: 8px; width: 100%; border-collapse: collapse; }
+  details.data-table th, details.data-table td {
+    text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .items-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+  .items-table th {
+    text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-muted);
+    padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .items-table td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .items-table tr:last-child td { border-bottom: none; }
+  .items-table .num { font-variant-numeric: tabular-nums; }
+  .items-table .muted-row td { color: var(--ink-muted); }
+  .items-table .t-title { font-weight: 500; max-width: 300px; }
+  .items-table .t-block { font-size: 12.5px; color: var(--ink-muted); }
+  .ratio-cell { min-width: 120px; }
+  .ratio-bar { display: flex; align-items: center; gap: 8px; }
+  .ratio-track { flex: 1; height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .ratio-fill { height: 100%; background: var(--c-tune); border-radius: 4px; }
+  .ratio-num { font-size: 12.5px; color: var(--ink-muted); font-variant-numeric: tabular-nums; width: 34px; }
+
+  @media (max-width: 640px) {
+    .items-table .t-block { display: none; }
+    .xlabels span:nth-child(odd) { visibility: hidden; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <a class="wordmark" href="./" style="text-decoration:none">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </a>
+    <nav aria-label="Owner pages">
+      <a href="admin.html">Master Control</a>
+      <span class="here">Ratings</span>
+    </nav>
+  </header>
+
+  <section class="gate" id="gate">
+    <h1>Ratings</h1>
+    <p>Enter your station key to see how the programme is performing.</p>
+    <form id="gateForm">
+      <input class="field" id="keyInput" type="password" autocomplete="current-password"
+             placeholder="Station key" aria-label="Station key" required>
+      <button class="btn btn-primary" style="font-size:15px; padding:12px 26px" type="submit">Unlock</button>
+    </form>
+    <p class="err" id="gateErr" role="alert"></p>
+  </section>
+
+  <section class="dash" id="dash">
+    <div class="tiles" id="tiles"></div>
+
+    <div class="panel">
+      <h2>Tune-ins by hour</h2>
+      <p class="sub">Last 7 days · your station's daily rhythm</p>
+      <div class="chart" id="hourChart"></div>
+      <details class="data-table"><summary>Data table</summary><div id="hourTable"></div></details>
+    </div>
+
+    <div class="panel">
+      <h2>Daily activity</h2>
+      <p class="sub">Last 14 days</p>
+      <div class="legend" aria-hidden="true">
+        <span class="key"><span class="swatch" style="background:var(--c-tune)"></span>Tune-ins</span>
+        <span class="key"><span class="swatch" style="background:var(--c-love)"></span>Loves</span>
+        <span class="key"><span class="swatch" style="background:var(--c-skip)"></span>Skips</span>
+      </div>
+      <div class="chart" id="dayChart"></div>
+      <details class="data-table"><summary>Data table</summary><div id="dayTable"></div></details>
+    </div>
+
+    <div class="panel">
+      <h2>Programme performance</h2>
+      <p class="sub">Every signal, per programme item · watch-through is the average completion of finished plays</p>
+      <table class="items-table" id="itemsTable">
+        <thead>
+          <tr><th>Item</th><th class="num">Tune-ins</th><th class="num">Loves</th><th class="num">Skips</th><th class="num">Finishes</th><th class="ratio-cell">Watch-through</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="tooltip" id="tooltip" role="status"></div>
+
+<script type="module">
+import { verifyOwnerKey, fetchAnalytics } from './station-api.mjs';
+
+const $ = id => document.getElementById(id);
+let stationKey = sessionStorage.getItem('station-one-key') || '';
+
+$('gateForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const key = $('keyInput').value.trim();
+  $('gateErr').textContent = '';
+  try {
+    const ok = await verifyOwnerKey(key);
+    if (!ok) { $('gateErr').textContent = 'That key does not match. Check it and try again.'; return; }
+    stationKey = key;
+    sessionStorage.setItem('station-one-key', key);
+    openDash();
+  } catch (err) {
+    $('gateErr').textContent = 'Could not reach the station backend. Try again.';
+  }
+});
+
+async function openDash() {
+  $('gate').style.display = 'none';
+  $('dash').style.display = 'block';
+  const a = await fetchAnalytics(stationKey);
+  renderTiles(a);
+  renderHourChart(a.by_hour);
+  renderDayChart(a.daily);
+  renderItems(a.items);
+}
+
+/* ---------- tooltip ---------- */
+const tip = $('tooltip');
+function bindTip(el, html) {
+  el.addEventListener('mouseenter', () => { tip.innerHTML = html; tip.classList.add('show'); });
+  el.addEventListener('mousemove', e => {
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - 250) + 'px';
+    tip.style.top = (e.clientY - 10) + 'px';
+  });
+  el.addEventListener('mouseleave', () => tip.classList.remove('show'));
+}
+const sw = c => `<span class="swatch" style="background:${c}"></span>`;
+
+/* ---------- tiles ---------- */
+function renderTiles(a) {
+  const t = a.totals;
+  const finishRatios = a.items.map(i => i.avg_ratio).filter(r => r != null);
+  const avgWT = finishRatios.length
+    ? Math.round(100 * finishRatios.reduce((s, r) => s + Number(r), 0) / finishRatios.length) + '%'
+    : '—';
+  const tiles = [
+    ['Tune-ins', t.tunes, 'all time'],
+    ['Viewers', t.sessions, 'unique devices'],
+    ['Loves', t.loves, 'all time'],
+    ['Skips', t.skips, 'all time'],
+    ['Watch-through', avgWT, 'avg of finished plays'],
+  ];
+  $('tiles').replaceChildren(...tiles.map(([label, value, sub]) => {
+    const d = document.createElement('div');
+    d.className = 'tile';
+    d.innerHTML = `<div class="t-label"></div><div class="t-value"></div><div class="t-sub"></div>`;
+    d.querySelector('.t-label').textContent = label;
+    d.querySelector('.t-value').textContent = value;
+    d.querySelector('.t-sub').textContent = sub;
+    return d;
+  }));
+}
+
+/* ---------- tune-ins by hour ---------- */
+function renderHourChart(byHour) {
+  const counts = Array.from({ length: 24 }, (_, h) => byHour.find(r => r.hour === h)?.tunes || 0);
+  const max = Math.max(1, ...counts);
+  const peak = counts.indexOf(Math.max(...counts));
+  const bars = document.createElement('div');
+  bars.className = 'bars';
+  const labels = document.createElement('div');
+  labels.className = 'xlabels';
+  counts.forEach((n, h) => {
+    const col = document.createElement('div');
+    col.className = 'bcol';
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (n === 0 ? ' zero' : '');
+    bar.style.height = Math.max(2, Math.round(100 * n / max)) + '%';
+    bar.style.background = 'var(--c-tune)';
+    if (h === peak && n > 0) {
+      const pl = document.createElement('span');
+      pl.className = 'peak-label';
+      pl.textContent = n;
+      bar.appendChild(pl);
+    }
+    bindTip(bar, `<div class="tt-title">${String(h).padStart(2, '0')}:00–${String(h).padStart(2, '0')}:59</div><div class="tt-row">${sw('var(--c-tune)')}${n} tune-in${n === 1 ? '' : 's'}</div>`);
+    col.appendChild(bar);
+    bars.appendChild(col);
+    const lab = document.createElement('span');
+    lab.textContent = h % 6 === 0 ? String(h).padStart(2, '0') : '';
+    labels.appendChild(lab);
+  });
+  $('hourChart').replaceChildren(bars, labels);
+  $('hourTable').innerHTML = '<table><tr><th>Hour</th><th>Tune-ins</th></tr>' +
+    counts.map((n, h) => `<tr><td>${String(h).padStart(2, '0')}:00</td><td>${n}</td></tr>`).join('') + '</table>';
+}
+
+/* ---------- daily activity (3 series, grouped) ---------- */
+function renderDayChart(daily) {
+  const days = [];
+  for (let d = 13; d >= 0; d--) {
+    const date = new Date(Date.now() - d * 86400e3);
+    const key = date.toISOString().slice(0, 10);
+    const row = daily.find(r => r.day === key);
+    days.push({ key, label: date.toLocaleDateString([], { day: 'numeric', month: 'short' }),
+                tunes: row?.tunes || 0, loves: row?.loves || 0, skips: row?.skips || 0 });
+  }
+  const max = Math.max(1, ...days.flatMap(d => [d.tunes, d.loves, d.skips]));
+  const bars = document.createElement('div');
+  bars.className = 'bars';
+  const labels = document.createElement('div');
+  labels.className = 'xlabels';
+  const series = [['tunes', 'var(--c-tune)', 'Tune-ins'], ['loves', 'var(--c-love)', 'Loves'], ['skips', 'var(--c-skip)', 'Skips']];
+  days.forEach((d, i) => {
+    const col = document.createElement('div');
+    col.className = 'bcol';
+    for (const [k, color, name] of series) {
+      const bar = document.createElement('div');
+      const n = d[k];
+      bar.className = 'bar' + (n === 0 ? ' zero' : '');
+      bar.style.height = Math.max(2, Math.round(100 * n / max)) + '%';
+      bar.style.background = color;
+      bindTip(bar, `<div class="tt-title">${d.label}</div>` +
+        series.map(([k2, c2, n2]) => `<div class="tt-row">${sw(c2)}${n2}: ${d[k2]}</div>`).join(''));
+      col.appendChild(bar);
+    }
+    bars.appendChild(col);
+    const lab = document.createElement('span');
+    lab.textContent = (i % 2 === 1 || days.length <= 7) ? d.label : '';
+    labels.appendChild(lab);
+  });
+  $('dayChart').replaceChildren(bars, labels);
+  $('dayTable').innerHTML = '<table><tr><th>Day</th><th>Tune-ins</th><th>Loves</th><th>Skips</th></tr>' +
+    days.map(d => `<tr><td>${d.label}</td><td>${d.tunes}</td><td>${d.loves}</td><td>${d.skips}</td></tr>`).join('') + '</table>';
+}
+
+/* ---------- programme performance ---------- */
+function renderItems(items) {
+  const tbody = $('itemsTable').querySelector('tbody');
+  tbody.replaceChildren();
+  for (const it of items) {
+    const tr = document.createElement('tr');
+    if (!it.position) tr.className = 'muted-row';
+    const ratio = it.avg_ratio != null ? Math.round(Number(it.avg_ratio) * 100) : null;
+    tr.innerHTML =
+      `<td class="t-title"></td>` +
+      `<td class="num">${it.tunes}</td><td class="num">${it.loves}</td>` +
+      `<td class="num">${it.skips}</td><td class="num">${it.finishes}</td>` +
+      `<td class="ratio-cell">${ratio != null
+        ? `<div class="ratio-bar"><div class="ratio-track"><div class="ratio-fill" style="width:${ratio}%"></div></div><span class="ratio-num">${ratio}%</span></div>`
+        : '<span class="ratio-num">—</span>'}</td>`;
+    const cell = tr.querySelector('.t-title');
+    cell.textContent = it.title;
+    if (it.block) {
+      const b = document.createElement('div');
+      b.className = 't-block';
+      b.textContent = it.block;
+      cell.appendChild(b);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+/* auto-unlock if the key is already in this session */
+if (stationKey) {
+  verifyOwnerKey(stationKey)
+    .then(ok => { if (ok) openDash(); else sessionStorage.removeItem('station-one-key'); })
+    .catch(() => {});
+}
+</script>
+</body>
+</html>
