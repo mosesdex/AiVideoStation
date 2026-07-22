@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — Brand Guide</title>
+<meta name="description" content="Station One brand guide: identity, color, typography, voice, and components for the personal video station.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="prototype/station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  .page { max-width: 980px; margin: 0 auto; padding: 0 24px 80px; }
+
+  .bg-hero { padding: 88px 0 64px; }
+  .bg-hero .wordmark { font-size: 40px; }
+  .bg-hero .logline {
+    margin-top: 16px; font-family: var(--font-identity);
+    font-size: clamp(28px, 5vw, 44px); font-weight: 650;
+    letter-spacing: -0.03em; line-height: 1.1; max-width: 16ch;
+    text-wrap: balance;
+  }
+  .bg-hero p.intro {
+    margin-top: 20px; font-size: 17px; color: var(--ink-muted); max-width: 60ch;
+  }
+
+  .bg-section { padding: 48px 0; border-top: 1px solid var(--border); }
+  .bg-section > h2 {
+    font-size: 23px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px;
+  }
+  .bg-section > .lead { color: var(--ink-muted); font-size: 15px; max-width: 62ch; margin-bottom: 28px; }
+
+  /* Color */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .swatch {
+    border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  .swatch .chip { height: 72px; }
+  .swatch .info { padding: 12px 14px; font-size: 13px; }
+  .swatch .info .name { font-weight: 600; }
+  .swatch .info .val { color: var(--ink-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  /* Type */
+  .specimen { display: flex; flex-direction: column; gap: 26px; }
+  .specimen .row { display: grid; grid-template-columns: 180px 1fr; gap: 20px; align-items: baseline; }
+  .specimen .use { font-size: 13px; color: var(--ink-muted); }
+  .sp-identity { font-family: var(--font-identity); font-size: 44px; font-weight: 650; letter-spacing: -0.03em; }
+  .sp-screen { font-size: 23px; font-weight: 600; }
+  .sp-body { font-size: 16px; max-width: 58ch; }
+  .sp-label { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-muted); }
+
+  /* Voice */
+  .voice-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .voice-col { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
+  .voice-col h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .voice-col.say h3 { color: var(--ok); }
+  .voice-col.avoid h3 { color: var(--ink-muted); }
+  .voice-col ul { list-style: none; }
+  .voice-col li { padding: 7px 0; font-size: 15px; }
+  .voice-col li + li { border-top: 1px solid var(--border); }
+  .voice-col .why { display: block; font-size: 13px; color: var(--ink-muted); margin-top: 2px; }
+
+  /* Components demo */
+  .demo-board {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 28px; display: flex; flex-wrap: wrap; gap: 22px; align-items: center;
+  }
+  .demo-note { font-size: 13px; color: var(--ink-muted); margin-top: 12px; }
+
+  /* Principles */
+  .principles { display: flex; flex-direction: column; }
+  .principle { display: grid; grid-template-columns: 44px 1fr; gap: 16px; padding: 18px 0; }
+  .principle + .principle { border-top: 1px solid var(--border); }
+  .principle .n {
+    font-family: var(--font-identity); font-size: 23px; font-weight: 650; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .principle h3 { font-size: 16px; font-weight: 600; }
+  .principle p { font-size: 14.5px; color: var(--ink-muted); margin-top: 3px; max-width: 62ch; }
+
+  .bg-footer { padding-top: 40px; border-top: 1px solid var(--border); font-size: 14px; color: var(--ink-muted); }
+  .bg-footer a { color: var(--ink); }
+
+  @media (max-width: 680px) {
+    .specimen .row { grid-template-columns: 1fr; gap: 6px; }
+    .voice-cols { grid-template-columns: 1fr; }
+    .bg-hero { padding: 56px 0 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="bg-hero">
+    <span class="wordmark">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </span>
+    <h1 class="logline">Programmed by a person. Tuned to you.</h1>
+    <p class="intro">The brand guide for Station One: a personal TV station with one channel, always on. The personality is cinematic premium: dark, confident, quiet. The interface is the dark room; the programme is the show.</p>
+  </header>
+
+  <section class="bg-section" aria-labelledby="h-identity">
+    <h2 id="h-identity">Identity</h2>
+    <p class="lead">The mark is a screen holding a play signal, always in Signal Red on black. The pulsing on-air dot is the signature: it means the station is live, and it appears in exactly two places (nav and on-air badge), nowhere else.</p>
+    <div class="demo-board">
+      <span class="wordmark" style="font-size:22px">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+        Station One
+      </span>
+      <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+      <span class="badge">YouTube</span>
+      <span class="badge station">Station</span>
+    </div>
+    <p class="demo-note">Wordmark in Bricolage Grotesque SemiBold · on-air badge · the two source badges required on every programme item.</p>
+  </section>
+
+  <section class="bg-section" aria-labelledby="h-color">
+    <h2 id="h-color">Color</h2>
+    <p class="lead">Restrained: OLED black and near-black neutrals carry everything; Signal Red stays under 10% of any screen and always means something (on air, primary action, current selection). The video is the color; the interface is the room around it.</p>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:oklch(0 0 0); border-bottom:1px solid var(--border)"></div><div class="info"><div class="name">Background</div><div class="val">oklch(0 0 0) · #000000</div></div></div>
+      <div class="swatch"><div class="chip" style="background:oklch(0.13 0.01 280)"></div><div class="info"><div class="name">Surface</div><div class="val">oklch(0.13 0.01 280) · #0d0d14</div></div></div>
+      <div class="swatch"><div class="chip" style="background:oklch(0.55 0.21 20)"></div><div class="info"><div class="name">Signal Red</div><div class="val">oklch(0.55 0.21 20) · #e11d48</div></div></div>
+      <div class="swatch"><div class="chip" style="background:oklch(0.98 0.005 250)"></div><div class="info"><div class="name">Ink</div><div class="val">oklch(0.98 0.005 250) · #f8fafc</div></div></div>
+      <div class="swatch"><div class="chip" style="background:oklch(0.75 0.02 280)"></div><div class="info"><div class="name">Ink muted</div><div class="val">oklch(0.75 0.02 280) · #a3a3b8</div></div></div>
+      <div class="swatch"><div class="chip" style="background:oklch(0.79 0.15 165)"></div><div class="info"><div class="name">Station green</div><div class="val">oklch(0.79 0.15 165) · #34d399</div></div></div>
+    </div>
+  </section>
+
+  <section class="bg-section" aria-labelledby="h-type">
+    <h2 id="h-type">Typography</h2>
+    <p class="lead">Two families with strict jobs. Instrument Sans does all the work: labels, buttons, body, data, on a fixed 1.2 scale. Bricolage Grotesque is the station's voice, reserved for the wordmark, one screen title at most, and the off-air card.</p>
+    <div class="specimen">
+      <div class="row"><span class="use">Identity · Bricolage Grotesque 650</span><span class="sp-identity">Off air</span></div>
+      <div class="row"><span class="use">Screen title · Instrument Sans 600 / 23</span><span class="sp-screen">Slow TV: Night Drive Through Tokyo</span></div>
+      <div class="row"><span class="use">Body · Instrument Sans 400 / 16</span><span class="sp-body">The station is quiet for the night. Dex's programme picks up again tomorrow at seven.</span></div>
+      <div class="row"><span class="use">Label · Instrument Sans 600 / 13</span><span class="sp-label">Evening Block · ends 9:30</span></div>
+    </div>
+  </section>
+
+  <section class="bg-section" aria-labelledby="h-voice">
+    <h2 id="h-voice">Voice</h2>
+    <p class="lead">The app talks like a station, quietly. Broadcast words, verbs for buttons, no hype.</p>
+    <div class="voice-cols">
+      <div class="voice-col say">
+        <h3>Say</h3>
+        <ul>
+          <li>On air · Up next · Later tonight · Off air</li>
+          <li>Tune in<span class="why">not "sign in to watch"</span></li>
+          <li>Programme<span class="why">not "queue" or "playlist"</span></li>
+          <li>Love · Skip · Start over<span class="why">buttons are verbs</span></li>
+        </ul>
+      </div>
+      <div class="voice-col avoid">
+        <h3>Never</h3>
+        <ul>
+          <li>"Content"<span class="why">it's a programme, made by a person</span></li>
+          <li>"Algorithm" · "For you feed"<span class="why">say "tuned to you"</span></li>
+          <li>Exclamation marks<span class="why">the station is calm</span></li>
+          <li>Engagement bait<span class="why">no streaks, no autoplay nags</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-section" aria-labelledby="h-comp">
+    <h2 id="h-comp">Core controls</h2>
+    <p class="lead">One primary action per screen, ghost buttons for the rest, and press feedback within 100ms. Every control ships default, hover, focus, active, and disabled states.</p>
+    <div class="demo-board">
+      <button class="btn btn-primary" style="font-size:16px; padding:14px 32px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        Tune in
+      </button>
+      <button class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Love
+      </button>
+      <button class="btn btn-ghost loved" aria-pressed="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Loved
+      </button>
+      <button class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        Skip
+      </button>
+    </div>
+    <p class="demo-note">Motion: 150–250ms ease-out, state changes only. The one indulgence is the 400ms TV-wake on tune-in; instant cut under reduced motion.</p>
+  </section>
+
+  <section class="bg-section" aria-labelledby="h-prin">
+    <h2 id="h-prin">Principles</h2>
+    <div class="principles">
+      <div class="principle"><span class="n">1</span><div><h3>Lean-back first</h3><p>The programme is always playing. Every UI element must justify interrupting it.</p></div></div>
+      <div class="principle"><span class="n">2</span><div><h3>The station has an owner</h3><p>Human curation is visible. "Programmed by Dex" is a feature, not a footnote.</p></div></div>
+      <div class="principle"><span class="n">3</span><div><h3>The player is sacred</h3><p>Nothing ever covers the video surface. All chrome lives beside or below the stage.</p></div></div>
+      <div class="principle"><span class="n">4</span><div><h3>One channel, one truth</h3><p>The guide shows now and next, never a catalog. No browsing paralysis.</p></div></div>
+      <div class="principle"><span class="n">5</span><div><h3>Compliance is design</h3><p>Source badges, ungated playback, and intact YouTube ads are part of the visual system.</p></div></div>
+    </div>
+  </section>
+
+  <footer class="bg-footer">
+    <p>Station One brand guide · see the <a href="prototype/tune-in.html">prototype screens</a> and the <a href="index.html">research report</a>.</p>
+  </footer>
+
+</div>
+</body>
+</html>

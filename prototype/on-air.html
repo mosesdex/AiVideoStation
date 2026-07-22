@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — On air</title>
+<meta name="description" content="Station One prototype: on-air player screen design.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .topbar .wordmark { font-size: 17px; }
+  .layout {
+    max-width: 1200px; margin: 0 auto;
+    padding: 8px 24px 48px;
+    display: grid; grid-template-columns: 1fr 320px; gap: 32px;
+    align-items: start;
+  }
+  .stage-wrap { position: relative; }
+
+  /* Mock video frame: night-drive still (pure CSS placeholder) */
+  .stage .mock-video {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 30% 18% at 68% 46%, oklch(0.7 0.14 60 / 0.5), transparent),
+      radial-gradient(ellipse 20% 12% at 30% 52%, oklch(0.65 0.12 250 / 0.45), transparent),
+      radial-gradient(ellipse 45% 25% at 50% 55%, oklch(0.3 0.05 280 / 0.6), transparent),
+      linear-gradient(180deg, oklch(0.12 0.02 270), oklch(0.08 0.015 280) 55%, oklch(0.05 0.01 280));
+  }
+  .stage .mock-road {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 38%;
+    background: linear-gradient(180deg, transparent, oklch(0.1 0.01 280));
+  }
+  .stage .yt-chrome {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 3px; background: oklch(0.3 0.02 280);
+  }
+  .stage .yt-chrome::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 42%;
+    background: var(--accent);
+  }
+
+  .below-stage {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 24px; margin-top: 18px; flex-wrap: wrap;
+  }
+  .now-meta .block-label {
+    font-size: 13px; color: var(--ink-muted); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .now-meta h1 {
+    font-size: 23px; font-weight: 600; letter-spacing: -0.01em;
+    line-height: 1.25; text-wrap: balance; max-width: 30ch;
+  }
+  .now-meta .sub {
+    margin-top: 8px; display: flex; align-items: center; gap: 10px;
+    font-size: 14px; color: var(--ink-muted);
+  }
+  .reactions { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; max-width: 100%; }
+  .reactions .hint {
+    width: 100%; text-align: right; margin-top: 8px;
+    font-size: 13px; color: var(--ink-muted);
+  }
+
+  .guide { position: sticky; top: 16px; }
+  .guide-list { display: flex; flex-direction: column; gap: 4px; }
+  .thumb-1 { background: linear-gradient(135deg, oklch(0.28 0.06 300), oklch(0.14 0.02 280)); }
+  .thumb-2 { background: linear-gradient(135deg, oklch(0.3 0.08 60), oklch(0.14 0.02 280)); }
+  .thumb-3 { background: linear-gradient(135deg, oklch(0.28 0.07 200), oklch(0.14 0.02 280)); }
+  .thumb-4 { background: linear-gradient(135deg, oklch(0.26 0.05 150), oklch(0.14 0.02 280)); }
+  .guide-foot {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--ink-muted);
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; padding: 0 0 40px; gap: 0; }
+    .topbar { padding: 14px 16px; }
+    .stage { border-radius: 0; }
+    .below-stage { padding: 16px; margin-top: 0; }
+    .guide { position: static; padding: 8px 16px 0; }
+    .reactions .hint { text-align: left; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="tune-in.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </a>
+    <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+  </header>
+
+  <main class="layout">
+    <section class="stage-wrap" aria-label="Now playing">
+      <div class="stage-glow" aria-hidden="true"></div>
+      <div class="stage" role="img" aria-label="Video stage: the YouTube or station player renders here, unobstructed">
+        <div class="mock-video" aria-hidden="true"></div>
+        <div class="mock-road" aria-hidden="true"></div>
+        <div class="yt-chrome" aria-hidden="true"></div>
+      </div>
+
+      <div class="below-stage">
+        <div class="now-meta">
+          <div class="block-label">Evening Block · ends 9:30</div>
+          <h1>Slow TV: Night Drive Through Tokyo</h1>
+          <div class="sub">
+            <span class="badge">YouTube</span>
+            <span>41 min left</span>
+          </div>
+        </div>
+        <div class="reactions" role="group" aria-label="Rate this programme">
+          <button class="btn btn-ghost loved" aria-pressed="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Loved
+          </button>
+          <button class="btn btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            Skip
+          </button>
+          <p class="hint">Your reactions tune the station to you</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="guide" aria-label="Programme guide">
+      <h2>Up next on Station One</h2>
+      <div class="guide-list">
+        <a class="guide-item now" href="#" aria-current="true">
+          <span class="time">Now</span>
+          <span class="thumb thumb-1" aria-hidden="true"></span>
+          <span class="meta">
+            <span class="title">Slow TV: Night Drive Through Tokyo</span>
+            <span class="sub"><span class="badge">YouTube</span></span>
+          </span>
+        </a>
+        <a class="guide-item" href="states.html">
+          <span class="time">8:50</span>
+          <span class="thumb thumb-2" aria-hidden="true"></span>
+          <span class="meta">
+            <span class="title">Studio Session: Analog Synths</span>
+            <span class="sub"><span class="badge station">Station</span></span>
+          </span>
+        </a>
+        <a class="guide-item" href="#">
+          <span class="time">9:30</span>
+          <span class="thumb thumb-3" aria-hidden="true"></span>
+          <span class="meta">
+            <span class="title">Dex's Weekly Film Pick: Opening Essay</span>
+            <span class="sub"><span class="badge station">Station</span></span>
+          </span>
+        </a>
+        <a class="guide-item" href="#">
+          <span class="time">9:45</span>
+          <span class="thumb thumb-4" aria-hidden="true"></span>
+          <span class="meta">
+            <span class="title">Field Recording: Rain on Glass</span>
+            <span class="sub"><span class="badge">YouTube</span></span>
+          </span>
+        </a>
+      </div>
+      <p class="guide-foot">Late Night Block starts 10:00 · programmed by Dex</p>
+    </aside>
+  </main>
+</body>
+</html>

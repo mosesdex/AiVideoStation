@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — Tune in</title>
+<meta name="description" content="Station One prototype: tune-in screen design.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  body {
+    display: grid; place-items: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 110%, oklch(0.55 0.21 20 / 0.1), transparent 70%),
+      var(--bg);
+  }
+  .tunein {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; max-width: 520px;
+  }
+  .tunein .wordmark { font-size: 28px; }
+  .tunein .logline {
+    margin-top: 10px; font-size: 15px; color: var(--ink-muted);
+  }
+  .now-card {
+    margin-top: 56px; width: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .now-card .label { display: flex; align-items: center; gap: 10px; }
+  .now-title {
+    font-size: 23px; font-weight: 600; line-height: 1.25;
+    text-wrap: balance;
+  }
+  .now-sub {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; color: var(--ink-muted);
+  }
+  .tune-btn { margin-top: 44px; }
+  .tune-btn svg { flex-shrink: 0; }
+  .schedule-hint {
+    margin-top: 40px; font-size: 14px; color: var(--ink-muted);
+    display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+  }
+  .schedule-hint span strong { color: var(--ink); font-weight: 500; }
+  .credit {
+    margin-top: 64px; font-size: 13px; color: var(--ink-muted);
+  }
+</style>
+</head>
+<body>
+  <main class="tunein">
+    <a class="wordmark" href="tune-in.html" aria-label="Station One home">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
+      Station One
+    </a>
+    <p class="logline">Programmed by a person. Tuned to you.</p>
+
+    <section class="now-card" aria-label="Now on air">
+      <div class="label">
+        <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+      </div>
+      <h1 class="now-title">Slow TV: Night Drive Through Tokyo</h1>
+      <div class="now-sub">
+        <span class="badge">YouTube</span>
+        <span>Evening Block · 41 min left</span>
+      </div>
+    </section>
+
+    <a class="btn btn-primary tune-btn" href="on-air.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+      Tune in
+    </a>
+
+    <div class="schedule-hint" aria-label="Coming up">
+      <span>Up next · <strong>Studio Session: Analog Synths</strong></span>
+      <span>9:30 · <strong>Dex's Weekly Film Pick</strong></span>
+    </div>
+
+    <p class="credit">A personal station by Dex · One channel, always on</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Station One — Station break &amp; off-air states</title>
+<meta name="description" content="Station One prototype: station break and off-air state designs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="station.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='3'/><polyline points='17 2 12 7 7 2'/><polygon points='10 11 15 14.5 10 18' fill='%23e11d48' stroke='none'/></svg>">
+<style>
+  .state-screen {
+    min-height: 100dvh;
+    display: grid; place-items: center;
+    padding: 24px; text-align: center;
+    position: relative;
+  }
+  .state-screen + .state-screen { border-top: 1px solid var(--border); }
+  .state-tag {
+    position: absolute; top: 20px; left: 24px;
+    font-size: 13px; color: var(--ink-muted);
+  }
+
+  /* Station break */
+  .break-card { max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+  .break-card .label {
+    font-size: 14px; color: var(--ink-muted); margin-bottom: 18px;
+  }
+  .break-card .next-thumb {
+    width: min(360px, 80vw); aspect-ratio: 16/9; border-radius: var(--radius);
+    background: linear-gradient(135deg, oklch(0.3 0.08 60), oklch(0.14 0.02 280));
+    position: relative; overflow: hidden;
+  }
+  .break-card .countdown {
+    position: absolute; right: 12px; bottom: 12px;
+    background: oklch(0 0 0 / 0.65);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 14px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .break-card h1 {
+    margin-top: 22px; font-size: 23px; font-weight: 600;
+    line-height: 1.25; text-wrap: balance;
+  }
+  .break-card .sub {
+    margin-top: 10px; display: flex; align-items: center; gap: 10px;
+    justify-content: center; font-size: 14px; color: var(--ink-muted);
+  }
+  .break-actions { margin-top: 28px; display: flex; gap: 10px; }
+
+  /* Off air */
+  .offair-screen {
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 115%, oklch(0.55 0.21 20 / 0.08), transparent 70%),
+      var(--bg);
+  }
+  .offair-card { max-width: 520px; display: flex; flex-direction: column; align-items: center; }
+  .offair-card .glyph { opacity: 0.9; }
+  .offair-card h1 {
+    margin-top: 26px;
+    font-family: var(--font-identity);
+    font-size: clamp(40px, 8vw, 64px); font-weight: 650;
+    letter-spacing: -0.03em; line-height: 1.05;
+  }
+  .offair-card .sub {
+    margin-top: 14px; font-size: 16px; color: var(--ink-muted);
+    max-width: 40ch;
+  }
+  .offair-sched {
+    margin-top: 40px; width: 100%; max-width: 380px;
+    text-align: left;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .offair-sched h2 {
+    font-size: 14px; font-weight: 600; color: var(--ink-muted);
+    margin-bottom: 12px;
+  }
+  .offair-sched .row {
+    display: flex; gap: 14px; align-items: baseline;
+    padding: 8px 0; font-size: 15px;
+  }
+  .offair-sched .row + .row { border-top: 1px solid var(--border); }
+  .offair-sched .row .t {
+    color: var(--accent); font-weight: 600; font-size: 14px;
+    font-variant-numeric: tabular-nums; flex-shrink: 0; width: 74px;
+  }
+  .offair-actions { margin-top: 32px; }
+</style>
+</head>
+<body>
+
+  <!-- State 1: Station break (between programme items, ~3s crossfade card) -->
+  <section class="state-screen" aria-label="Design state: station break">
+    <span class="state-tag">State · Station break (shown ~3s between items)</span>
+    <div class="break-card">
+      <div class="label">Up next on Station One</div>
+      <div class="next-thumb" aria-hidden="true">
+        <span class="countdown">in 3</span>
+      </div>
+      <h1>Studio Session: Analog Synths</h1>
+      <div class="sub">
+        <span class="badge station">Station</span>
+        <span>Evening Block · 24 min</span>
+      </div>
+      <div class="break-actions">
+        <a class="btn btn-ghost" href="on-air.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          Skip ahead
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- State 2: Off air -->
+  <section class="state-screen offair-screen" aria-label="Design state: off air">
+    <span class="state-tag">State · Off air (nothing scheduled)</span>
+    <div class="offair-card">
+      <svg class="glyph" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><line x1="8" y1="14.5" x2="16" y2="14.5"/></svg>
+      <h1>Off air</h1>
+      <p class="sub">The station is quiet for the night. Dex's programme picks up again tomorrow.</p>
+      <div class="offair-sched">
+        <h2>Tomorrow on Station One</h2>
+        <div class="row"><span class="t">7:00</span><span>Morning Coffee: Jazz on Vinyl</span></div>
+        <div class="row"><span class="t">12:30</span><span>Lunch Loop: Short Documentaries</span></div>
+        <div class="row"><span class="t">8:00</span><span>Evening Block: Slow TV</span></div>
+      </div>
+      <div class="offair-actions">
+        <a class="btn btn-ghost" href="tune-in.html">Remind me at 7:00</a>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>
