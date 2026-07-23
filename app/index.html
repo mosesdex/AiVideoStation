@@ -669,6 +669,7 @@ function newsRemaining(w) {
 
 function enterNews(w) {
   newsMode = w;
+  pendingStart = null;   // cancel any queued loop play (YT API not-ready race)
   offLiveFlag = false; paused = false;
   if (breakTimer) { clearInterval(breakTimer); breakTimer = null; }
   clearInterval(progressTimer);
@@ -868,7 +869,8 @@ document.addEventListener('keydown', e => {
 /* ---------- YouTube IFrame API bootstrap ---------- */
 window.onYouTubeIframeAPIReady = function () {
   ytApiReady = true;
-  if (pendingStart) { const p = pendingStart; pendingStart = null; playItem(p.index, p.offset); }
+  if (pendingStart && !newsMode) { const p = pendingStart; pendingStart = null; playItem(p.index, p.offset); }
+  else pendingStart = null;
 };
 const tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
