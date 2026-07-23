@@ -69,6 +69,7 @@
     animation: pulse 2s var(--ease) infinite;
   }
 
+  .transport [hidden] { display: none !important; } /* .btn's display would otherwise beat [hidden] */
   .transport { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
   .transport-spacer { flex: 1; }
   .transport .btn-ghost { font-size: 14px; padding: 9px 18px; }
