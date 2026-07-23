@@ -112,3 +112,35 @@ test('estimateMB rounds to one decimal and never goes negative', async () => {
   assert.equal(estimateMB(7, 0.5), 3.5);
   assert.equal(estimateMB(-100, 0.5), 0);
 });
+
+test('activeNewsWindow returns null when no windows or none match', async () => {
+  const { activeNewsWindow } = await import('./station-core.mjs');
+  const W = [{ label: 'AM', start: 360, end: 420, channel: 'c', source: 'AJ' }];
+  assert.equal(activeNewsWindow(100, W), null);
+  assert.equal(activeNewsWindow(500, []), null);
+});
+
+test('activeNewsWindow matches inside a window; start inclusive, end exclusive', async () => {
+  const { activeNewsWindow } = await import('./station-core.mjs');
+  const W = [{ label: 'AM', start: 360, end: 420, channel: 'c', source: 'AJ' }];
+  assert.equal(activeNewsWindow(360, W).label, 'AM'); // start inclusive
+  assert.equal(activeNewsWindow(400, W).label, 'AM');
+  assert.equal(activeNewsWindow(420, W), null);       // end exclusive
+});
+
+test('activeNewsWindow supports a window that wraps past midnight', async () => {
+  const { activeNewsWindow } = await import('./station-core.mjs');
+  const W = [{ label: 'Late', start: 1380, end: 60, channel: 'c', source: 'CNN' }]; // 23:00-01:00
+  assert.equal(activeNewsWindow(1400, W).label, 'Late'); // 23:20
+  assert.equal(activeNewsWindow(30, W).label, 'Late');   // 00:30
+  assert.equal(activeNewsWindow(120, W), null);          // 02:00
+});
+
+test('activeNewsWindow returns the first matching window when several overlap', async () => {
+  const { activeNewsWindow } = await import('./station-core.mjs');
+  const W = [
+    { label: 'A', start: 1200, end: 1260, channel: 'a', source: 'AJ' },
+    { label: 'B', start: 1230, end: 1290, channel: 'b', source: 'CNN' },
+  ];
+  assert.equal(activeNewsWindow(1240, W).label, 'A');
+});

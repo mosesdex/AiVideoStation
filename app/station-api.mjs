@@ -53,6 +53,15 @@ export function fetchAnalytics(key) {
   return rpc('get_analytics', { p_key: key });
 }
 
+export async function fetchNewsWindows() {
+  const res = await fetch(
+    `${BASE}/rest/v1/news_windows?select=label,start_min,end_min,channel_id,source_name&active=eq.true&order=sort.asc`,
+    { headers: HEADERS }
+  );
+  if (!res.ok) throw new Error('news fetch failed: ' + res.status);
+  return res.json();
+}
+
 export function heartbeat(session) {
   return rpc('heartbeat', { p_session: session }).catch(() => {});
 }

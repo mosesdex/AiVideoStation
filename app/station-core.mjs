@@ -1,5 +1,28 @@
 /* Station One — pure schedule engine (tested in station-core.test.mjs) */
 
+/* Live-news windows are real time-of-day slots (minutes since local
+   midnight) that override the loop with a live channel. A window whose
+   start > end wraps past midnight. First match wins. */
+export function activeNewsWindow(mins, windows) {
+  for (const w of windows) {
+    const inside = w.start <= w.end
+      ? (mins >= w.start && mins < w.end)
+      : (mins >= w.start || mins < w.end);
+    if (inside) return w;
+  }
+  return null;
+}
+
+export function mapNewsRow(row) {
+  return {
+    label: row.label,
+    start: Number(row.start_min),
+    end: Number(row.end_min),
+    channel: row.channel_id,
+    source: row.source_name,
+  };
+}
+
 /* Rough data-used estimate: no exact byte count is available for a
    cross-origin YouTube embed, so we approximate from watch time and a
    labeled per-second rate. Honest ballpark, shown to the viewer as "~". */

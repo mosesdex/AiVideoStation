@@ -60,6 +60,14 @@
     font-size: 13px; color: var(--ink-muted); font-variant-numeric: tabular-nums;
   }
   .live-stats .stat svg { opacity: .8; }
+  .badge.live {
+    border-color: var(--accent); color: var(--accent-ink); background: var(--accent);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .badge.live::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff;
+    animation: pulse 2s var(--ease) infinite;
+  }
 
   .transport { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
   .transport-spacer { flex: 1; }
@@ -277,10 +285,10 @@
    ungated, unmodified, nothing rendered over the player.
    ═══════════════════════════════════════════════════════════════ */
 import { totalSeconds, locate as coreLocate, livePosition as coreLivePosition,
-         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs?v=2';
-import { estimateMB } from './station-core.mjs?v=2';
-import { fetchStation, fetchProgramme, postSignal, heartbeat, getWatching } from './station-api.mjs?v=2';
-import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs?v=2';
+         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs?v=3';
+import { estimateMB, activeNewsWindow, mapNewsRow } from './station-core.mjs?v=3';
+import { fetchStation, fetchProgramme, postSignal, heartbeat, getWatching, fetchNewsWindows } from './station-api.mjs?v=3';
+import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs?v=3';
 
 const MB_PER_SEC = 0.5; // ~4 Mbps, a labeled ballpark; exact bytes aren't available for a YouTube embed
 let sessionSeconds = 0;
@@ -348,13 +356,15 @@ function applyTaste(items) {
   return tuned;
 }
 
+let NEWS = [];
 async function loadProgramme() {
   try {
-    const [station, rows] = await Promise.all([fetchStation(), fetchProgramme()]);
+    const [station, rows, news] = await Promise.all([fetchStation(), fetchProgramme(), fetchNewsWindows().catch(() => [])]);
     if (rows && rows.length) {
       RAW = rows.map(mapRow);
       ANCHOR = Number(station.anchor_ms) || ANCHOR;
     }
+    NEWS = (news || []).map(mapNewsRow);
   } catch (e) {
     toast('Offline — playing the built-in demo programme');
   }
@@ -362,6 +372,8 @@ async function loadProgramme() {
   TOTAL = totalSeconds(PROGRAMME);
   renderPicker();
 }
+
+const nowLocalMinutes = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 
 /* ---------- onboarding taste picker (first visit only) ---------- */
 function renderPicker() {
@@ -616,6 +628,86 @@ function startPresence() {
   presenceTimers.push(setInterval(pollWatching, 15000));
 }
 
+/* ---------- live news windows (real time-of-day override) ---------- */
+let newsMode = null;
+let newsTimer = null;
+let newsDataTimer = null;
+
+function newsRemaining(w) {
+  const now = nowLocalMinutes();
+  const rem = w.start <= w.end ? (w.end - now) : (now < w.end ? w.end - now : 1440 - now + w.end);
+  return Math.max(1, rem);
+}
+
+function enterNews(w) {
+  newsMode = w;
+  offLiveFlag = false; paused = false;
+  if (breakTimer) { clearInterval(breakTimer); breakTimer = null; }
+  clearInterval(progressTimer);
+  teardownPlayers();
+  $('breakCard').classList.remove('active');
+  $('whyPanel').hidden = true;
+
+  const f = document.createElement('iframe');
+  f.src = 'https://www.youtube.com/embed/live_stream?channel=' + w.channel + '&autoplay=1';
+  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  f.setAttribute('allowfullscreen', '');
+  $('playerMount').replaceChildren(f);
+
+  $('nowBlock').textContent = w.label + ' · live now';
+  $('nowTitle').textContent = w.source;
+  $('nowBadge').textContent = 'LIVE';
+  $('nowBadge').className = 'badge live';
+  $('nowTime').textContent = '~' + newsRemaining(w) + ' min of news';
+  $('progressBar').style.transform = 'scaleX(1)';
+  document.querySelector('.transport').style.display = 'none';
+  document.querySelector('.reactions').style.display = 'none';
+  renderNewsGuide(w);
+  document.title = 'Station One — Live: ' + w.source;
+  logSignal('tune', { id: 'news:' + w.label });
+
+  clearInterval(newsDataTimer);
+  newsDataTimer = setInterval(() => {
+    sessionSeconds += 1; updateData();
+    $('nowTime').textContent = '~' + newsRemaining(w) + ' min of news';
+  }, 1000);
+}
+
+function exitNews() {
+  newsMode = null;
+  clearInterval(newsDataTimer);
+  document.querySelector('.transport').style.display = '';
+  document.querySelector('.reactions').style.display = '';
+  backToLive(); // rejoin the loop at the shared wall-clock position
+}
+
+function maybeSwitchNews() {
+  const w = activeNewsWindow(nowLocalMinutes(), NEWS);
+  if (w && (!newsMode || newsMode.label !== w.label)) enterNews(w);
+  else if (!w && newsMode) exitNews();
+}
+
+function startNews() {
+  if (newsTimer) return;
+  maybeSwitchNews();
+  newsTimer = setInterval(maybeSwitchNews, 20000);
+}
+
+function renderNewsGuide(w) {
+  const list = $('guideList');
+  const row = document.createElement('div');
+  row.className = 'guide-item now';
+  row.innerHTML =
+    '<span class="time" style="color:var(--accent)">Live</span>' +
+    '<span class="thumb thumb-a" aria-hidden="true"></span>' +
+    '<span class="meta"><span class="title"></span>' +
+    '<span class="sub"><span class="badge live">LIVE NEWS</span></span></span>';
+  row.querySelector('.title').textContent = w.source;
+  list.replaceChildren(row);
+  $('guideList').nextElementSibling && ($('guideList').parentElement.querySelector('.guide-foot').textContent =
+    'Live ' + w.label + ' · programme resumes after the news');
+}
+
 let toastTimer = null;
 function toast(msg) {
   const t = $('toast');
@@ -627,6 +719,14 @@ function toast(msg) {
 
 /* ---------- tune-in flow ---------- */
 function refreshTunein() {
+  const w = activeNewsWindow(nowLocalMinutes(), NEWS);
+  if (w) {
+    $('tuneinTitle').textContent = w.source;
+    $('tuneinBadge').textContent = 'LIVE';
+    $('tuneinBadge').className = 'badge live';
+    $('tuneinSub').textContent = w.label + ' · live now';
+    return;
+  }
   const { index, offset } = locate(livePosition());
   const item = PROGRAMME[index];
   $('tuneinTitle').textContent = item.title;
@@ -648,6 +748,7 @@ $('btnTunein').addEventListener('click', async () => {
   const { index, offset } = locate(livePosition());
   playItem(index, offset);
   startPresence();
+  startNews();
 });
 
 $('btnLive').addEventListener('click', backToLive);
