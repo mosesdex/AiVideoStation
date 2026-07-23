@@ -714,15 +714,16 @@ function skipNews() {
 
 function maybeSwitchNews() {
   const w = activeNewsWindow(nowLocalMinutes(), NEWS);
-  if (!w) { dismissedNews = null; if (newsMode) exitToLoop(); return; }
-  if (dismissedNews === w.label) return;      // viewer opted out of this window
-  if (!newsMode || newsMode.label !== w.label) enterNews(w);
+  if (!w) { dismissedNews = null; if (newsMode) exitToLoop(); }
+  else if (dismissedNews === w.label) { /* viewer opted out this window */ }
+  else if (!newsMode || newsMode.label !== w.label) enterNews(w);
+  renderTransport(); // self-heal: buttons always match the real state
 }
 
 function startNews() {
   if (newsTimer) return;
   maybeSwitchNews();
-  newsTimer = setInterval(maybeSwitchNews, 20000);
+  newsTimer = setInterval(maybeSwitchNews, 8000);
 }
 
 function renderNewsGuide(w) {
