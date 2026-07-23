@@ -90,6 +90,11 @@
   .stage iframe, .stage video {
     position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
     display: block;
+    animation: stagefade 350ms var(--ease) both;
+  }
+  @keyframes stagefade { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .stage iframe, .stage video { animation: none; }
   }
   /* Station break card: fills the stage ONLY when no player is mounted */
   .break-card {
@@ -521,7 +526,8 @@ function watchProgress(item, getTime) {
 }
 
 function updateData() {
-  $('dataCount').textContent = '~' + estimateMB(sessionSeconds, MB_PER_SEC) + ' MB';
+  const mb = estimateMB(sessionSeconds, MB_PER_SEC);
+  $('dataCount').textContent = mb >= 1024 ? '~' + (mb / 1024).toFixed(2) + ' GB' : '~' + mb + ' MB';
 }
 
 function endOfItem(item, errored = false) {
@@ -737,9 +743,25 @@ function renderNewsGuide(w) {
     '<span class="meta"><span class="title"></span>' +
     '<span class="sub"><span class="badge live">LIVE NEWS</span></span></span>';
   row.querySelector('.title').textContent = w.source;
-  list.replaceChildren(row);
-  $('guideList').nextElementSibling && ($('guideList').parentElement.querySelector('.guide-foot').textContent =
-    'Live ' + w.label + ' · programme resumes after the news');
+  const rows = [row];
+  // show what resumes after the news, from the loop position
+  for (let k = 0; k < Math.min(3, PROGRAMME.length); k++) {
+    const item = PROGRAMME[(currentIndex + k) % PROGRAMME.length];
+    if (!item) continue;
+    const r = document.createElement('div');
+    r.className = 'guide-item';
+    r.innerHTML =
+      '<span class="time">After</span>' +
+      '<span class="thumb ' + (item.thumb || 'thumb-a') + '" aria-hidden="true"></span>' +
+      '<span class="meta"><span class="title"></span>' +
+      '<span class="sub"><span class="badge' + (item.type === 'station' ? ' station' : '') + '">' +
+      (item.type === 'youtube' ? 'YouTube' : 'Station') + '</span></span></span>';
+    r.querySelector('.title').textContent = item.title;
+    rows.push(r);
+  }
+  list.replaceChildren(...rows);
+  const foot = $('guideList').closest('.guide').querySelector('.guide-foot');
+  if (foot) foot.textContent = 'Live ' + w.label + ' · programme resumes after the news';
 }
 
 let toastTimer = null;
