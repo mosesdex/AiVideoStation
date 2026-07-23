@@ -744,9 +744,10 @@ function renderNewsGuide(w) {
     '<span class="sub"><span class="badge live">LIVE NEWS</span></span></span>';
   row.querySelector('.title').textContent = w.source;
   const rows = [row];
-  // show what resumes after the news, from the loop position
+  // what resumes after the news = the live loop position right now
+  const base = locate(livePosition()).index;
   for (let k = 0; k < Math.min(3, PROGRAMME.length); k++) {
-    const item = PROGRAMME[(currentIndex + k) % PROGRAMME.length];
+    const item = PROGRAMME[(base + k) % PROGRAMME.length];
     if (!item) continue;
     const r = document.createElement('div');
     r.className = 'guide-item';
