@@ -170,8 +170,8 @@
 </template>
 
 <script type="module">
-import { totalSeconds, locate, livePosition, mapRow } from './station-core.mjs';
-import { fetchStation, fetchProgramme, verifyOwnerKey, saveProgramme } from './station-api.mjs';
+import { totalSeconds, locate, livePosition, mapRow } from './station-core.mjs?v=2';
+import { fetchStation, fetchProgramme, verifyOwnerKey, saveProgramme } from './station-api.mjs?v=2';
 
 const $ = id => document.getElementById(id);
 let items = [];      // editor model: {type, videoId, src, title, block, slot}

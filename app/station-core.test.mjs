@@ -99,3 +99,16 @@ test('mapRow carries tags and smart through, defaulting when absent', async () =
   assert.deepEqual(bare.tags, []);
   assert.equal(bare.smart, false);
 });
+
+test('estimateMB scales watched seconds by the per-second rate', async () => {
+  const { estimateMB } = await import('./station-core.mjs');
+  assert.equal(estimateMB(0, 0.5), 0);
+  assert.equal(estimateMB(120, 0.5), 60);   // 2 min at 0.5 MB/s = 60 MB
+  assert.equal(estimateMB(10, 0.5), 5);
+});
+
+test('estimateMB rounds to one decimal and never goes negative', async () => {
+  const { estimateMB } = await import('./station-core.mjs');
+  assert.equal(estimateMB(7, 0.5), 3.5);
+  assert.equal(estimateMB(-100, 0.5), 0);
+});

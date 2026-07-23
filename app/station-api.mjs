@@ -52,3 +52,11 @@ export function saveProgramme(key, items) {
 export function fetchAnalytics(key) {
   return rpc('get_analytics', { p_key: key });
 }
+
+export function heartbeat(session) {
+  return rpc('heartbeat', { p_session: session }).catch(() => {});
+}
+
+export function getWatching() {
+  return rpc('get_watching');
+}

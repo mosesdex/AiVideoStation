@@ -1,5 +1,12 @@
 /* Station One — pure schedule engine (tested in station-core.test.mjs) */
 
+/* Rough data-used estimate: no exact byte count is available for a
+   cross-origin YouTube embed, so we approximate from watch time and a
+   labeled per-second rate. Honest ballpark, shown to the viewer as "~". */
+export function estimateMB(seconds, mbPerSec) {
+  return Math.max(0, Math.round(seconds * mbPerSec * 10) / 10);
+}
+
 export function mapRow(row) {
   return {
     id: row.id,

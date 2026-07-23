@@ -186,7 +186,7 @@
 <div class="tooltip" id="tooltip" role="status"></div>
 
 <script type="module">
-import { verifyOwnerKey, fetchAnalytics } from './station-api.mjs';
+import { verifyOwnerKey, fetchAnalytics } from './station-api.mjs?v=2';
 
 const $ = id => document.getElementById(id);
 let stationKey = sessionStorage.getItem('station-one-key') || '';

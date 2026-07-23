@@ -54,6 +54,24 @@
     padding: 16px 24px; max-width: 1200px; margin: 0 auto;
   }
   .topbar .wordmark { font-size: 17px; }
+  .live-stats { display: flex; align-items: center; gap: 16px; }
+  .live-stats .stat {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--ink-muted); font-variant-numeric: tabular-nums;
+  }
+  .live-stats .stat svg { opacity: .8; }
+
+  .transport { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .transport-spacer { flex: 1; }
+  .transport .btn-ghost { font-size: 14px; padding: 9px 18px; }
+  .dot-mini {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    animation: pulse 2s var(--ease) infinite;
+  }
+  @media (max-width: 900px) {
+    .live-stats { gap: 10px; }
+    .transport { padding: 0 16px; }
+  }
   .layout {
     max-width: 1200px; margin: 0 auto; padding: 8px 24px 48px;
     display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start;
@@ -170,7 +188,17 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="3"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 15 14.5 10 18 10 11" fill="#e11d48" stroke="none"/></svg>
       Station One
     </span>
-    <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+    <div class="live-stats">
+      <span class="stat" id="watchingStat" title="People watching the station right now">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span id="watchingCount">—</span>
+      </span>
+      <span class="stat" id="dataStat" title="Rough estimate of data used this session">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+        <span id="dataCount">~0 MB</span>
+      </span>
+      <span class="onair"><span class="dot" aria-hidden="true"></span>ON AIR</span>
+    </div>
   </header>
 
   <main class="layout">
@@ -186,6 +214,18 @@
         </div>
       </div>
       <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
+
+      <div class="transport">
+        <button class="btn btn-ghost" id="btnLive" hidden>
+          <span class="dot-mini" aria-hidden="true"></span>
+          Back to live
+        </button>
+        <span class="transport-spacer"></span>
+        <button class="btn btn-ghost" id="btnNext" title="Play the next programme item">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        </button>
+      </div>
 
       <div class="below-stage">
         <div class="now-meta">
@@ -237,9 +277,14 @@
    ungated, unmodified, nothing rendered over the player.
    ═══════════════════════════════════════════════════════════════ */
 import { totalSeconds, locate as coreLocate, livePosition as coreLivePosition,
-         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs';
-import { fetchStation, fetchProgramme, postSignal } from './station-api.mjs';
-import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs';
+         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs?v=2';
+import { estimateMB } from './station-core.mjs?v=2';
+import { fetchStation, fetchProgramme, postSignal, heartbeat, getWatching } from './station-api.mjs?v=2';
+import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs?v=2';
+
+const MB_PER_SEC = 0.5; // ~4 Mbps, a labeled ballpark; exact bytes aren't available for a YouTube embed
+let sessionSeconds = 0;
+let paused = false;
 
 const W3M = 'https://media.w3.org/2010/05/';
 const FALLBACK = [
@@ -402,6 +447,7 @@ function playItem(index, offset) {
   $('btnWhy').setAttribute('aria-expanded', 'false');
   updateMeta(item, offset);
   renderGuide();
+  updateLiveBtn();
 
   if (item.type === 'youtube') {
     const start = Math.max(0, Math.floor(offset));
@@ -438,15 +484,26 @@ let watchedSeconds = 0;
 function watchProgress(item, getTime) {
   clearInterval(progressTimer);
   watchedSeconds = 0;
+  let lastT = getTime();
   progressTimer = setInterval(() => {
     const t = getTime();
+    // count real elapsed playback only: a 1s tick advances ~1s. Ignore
+    // large jumps (join-live seek, scrubbing) and backward moves.
+    const delta = t - lastT;
+    if (delta > 0 && delta <= 2) sessionSeconds += delta;
+    lastT = t;
     watchedSeconds = Math.max(watchedSeconds, t);
+    updateData();
     const pct = Math.min(1, t / item.slot);
     $('progressBar').style.transform = 'scaleX(' + pct + ')';
     const left = Math.max(0, item.slot - t);
     $('nowTime').textContent = fmtMin(left) + ' left';
     if (t >= item.slot) endOfItem(item);
   }, 1000);
+}
+
+function updateData() {
+  $('dataCount').textContent = '~' + estimateMB(sessionSeconds, MB_PER_SEC) + ' MB';
 }
 
 function endOfItem(item, errored = false) {
@@ -518,6 +575,47 @@ function renderGuide() {
   }
 }
 
+/* ---------- transport: back-to-live & next ----------
+   offLiveFlag is set by explicit viewer actions (Next, Skip, pause), NOT
+   by the schedule's natural early-end drift — otherwise the button would
+   show constantly. Back-to-live discards drift and rejoins the shared clock. */
+let offLiveFlag = false;
+function updateLiveBtn() { $('btnLive').hidden = !offLiveFlag; }
+function markOffLive() { offLiveFlag = true; updateLiveBtn(); }
+
+function backToLive() {
+  offLiveFlag = false;
+  localOffset = 0;      // rejoin the shared broadcast everyone else is on
+  paused = false;
+  const { index, offset } = locate(livePosition());
+  playItem(index, offset);
+  toast('Back to live');
+}
+
+function nextItem() {
+  const item = PROGRAMME[currentIndex];
+  if (!item || breakTimer) return;
+  markOffLive();
+  // neutral navigation (not a taste signal): advance one item, quick break
+  endOfItem(item, true);
+}
+
+/* ---------- presence: who's watching now ---------- */
+let presenceTimers = [];
+async function pollWatching() {
+  try {
+    const n = await getWatching();
+    $('watchingCount').textContent = n;
+    $('watchingStat').title = n === 1 ? '1 person watching now' : n + ' people watching now';
+  } catch (e) { /* keep last value */ }
+}
+function startPresence() {
+  if (presenceTimers.length) return;
+  heartbeat(SESSION).then(() => pollWatching());  // poll after our heartbeat commits
+  presenceTimers.push(setInterval(() => heartbeat(SESSION), 20000));
+  presenceTimers.push(setInterval(pollWatching, 15000));
+}
+
 let toastTimer = null;
 function toast(msg) {
   const t = $('toast');
@@ -549,7 +647,11 @@ $('btnTunein').addEventListener('click', async () => {
   $('viewPlayer').style.display = 'block';
   const { index, offset } = locate(livePosition());
   playItem(index, offset);
+  startPresence();
 });
+
+$('btnLive').addEventListener('click', backToLive);
+$('btnNext').addEventListener('click', nextItem);
 
 $('btnLove').addEventListener('click', () => {
   const item = PROGRAMME[currentIndex];
@@ -585,6 +687,7 @@ $('btnSkip').addEventListener('click', () => {
   if (!item || breakTimer) return;
   logSignal('skip', item);
   toast('Skipping — noted for your tuning');
+  markOffLive();
   endOfItem(item, true);
 });
 
@@ -593,10 +696,14 @@ document.addEventListener('keydown', e => {
   if ($('viewPlayer').style.display === 'none') return;
   e.preventDefault();
   if (ytPlayer && ytPlayer.getPlayerState) {
-    ytPlayer.getPlayerState() === YT.PlayerState.PLAYING ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    const playing = ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+    playing ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    paused = playing;
   } else if (stationVideo) {
+    paused = !stationVideo.paused;
     stationVideo.paused ? stationVideo.play() : stationVideo.pause();
   }
+  if (paused) markOffLive();   // a paused viewer has fallen behind live
 });
 
 /* ---------- YouTube IFrame API bootstrap ---------- */
