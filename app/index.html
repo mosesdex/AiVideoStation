@@ -228,6 +228,10 @@
           <span class="dot-mini" aria-hidden="true"></span>
           Back to live
         </button>
+        <button class="btn btn-ghost" id="btnSkipNews" hidden title="Leave the live news and go back to the programme">
+          Skip the news
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        </button>
         <span class="transport-spacer"></span>
         <button class="btn btn-ghost" id="btnNext" title="Play the next programme item">
           Next
@@ -285,10 +289,10 @@
    ungated, unmodified, nothing rendered over the player.
    ═══════════════════════════════════════════════════════════════ */
 import { totalSeconds, locate as coreLocate, livePosition as coreLivePosition,
-         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs?v=3';
-import { estimateMB, activeNewsWindow, mapNewsRow } from './station-core.mjs?v=3';
-import { fetchStation, fetchProgramme, postSignal, heartbeat, getWatching, fetchNewsWindows } from './station-api.mjs?v=3';
-import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs?v=3';
+         resolveAdvance, slotStartDelta, mapRow } from './station-core.mjs?v=4';
+import { estimateMB, activeNewsWindow, mapNewsRow } from './station-core.mjs?v=4';
+import { fetchStation, fetchProgramme, postSignal, heartbeat, getWatching, fetchNewsWindows } from './station-api.mjs?v=4';
+import { buildTaste, personalizeProgramme, explain } from './station-taste.mjs?v=4';
 
 const MB_PER_SEC = 0.5; // ~4 Mbps, a labeled ballpark; exact bytes aren't available for a YouTube embed
 let sessionSeconds = 0;
@@ -457,9 +461,10 @@ function playItem(index, offset) {
   $('breakCard').classList.remove('active');
   $('whyPanel').hidden = true;
   $('btnWhy').setAttribute('aria-expanded', 'false');
+  document.querySelector('.reactions').style.display = '';
   updateMeta(item, offset);
   renderGuide();
-  updateLiveBtn();
+  renderTransport();
 
   if (item.type === 'youtube') {
     const start = Math.max(0, Math.floor(offset));
@@ -519,7 +524,7 @@ function updateData() {
 }
 
 function endOfItem(item, errored = false) {
-  if (breakTimer) return;
+  if (newsMode || breakTimer) return;
   clearInterval(progressTimer);
   if (!errored && item) {
     const ratio = Math.min(1, watchedSeconds / item.slot);
@@ -592,19 +597,34 @@ function renderGuide() {
    by the schedule's natural early-end drift — otherwise the button would
    show constantly. Back-to-live discards drift and rejoins the shared clock. */
 let offLiveFlag = false;
-function updateLiveBtn() { $('btnLive').hidden = !offLiveFlag; }
-function markOffLive() { offLiveFlag = true; updateLiveBtn(); }
+/* Single source of truth for the transport row. In news: only "Skip the
+   news". In the loop: "Next" always, "Back to live" only when off-live. */
+function renderTransport() {
+  const inNews = !!newsMode;
+  $('btnSkipNews').hidden = !inNews;
+  $('btnNext').hidden = inNews;
+  $('btnLive').hidden = inNews ? true : !offLiveFlag;
+}
+const updateLiveBtn = renderTransport;
+function markOffLive() { offLiveFlag = true; renderTransport(); }
 
+/* Back to live = whatever is genuinely live right now: the news if a
+   window is active, else the loop at the shared wall-clock position. */
 function backToLive() {
-  offLiveFlag = false;
-  localOffset = 0;      // rejoin the shared broadcast everyone else is on
-  paused = false;
-  const { index, offset } = locate(livePosition());
-  playItem(index, offset);
+  dismissedNews = null;
+  offLiveFlag = false; paused = false; localOffset = 0;
+  const w = activeNewsWindow(nowLocalMinutes(), NEWS);
+  if (w) { enterNews(w); }
+  else {
+    if (newsMode) { newsMode = null; clearInterval(newsDataTimer); }
+    const { index, offset } = locate(livePosition());
+    playItem(index, offset);
+  }
   toast('Back to live');
 }
 
 function nextItem() {
+  if (newsMode) return;
   const item = PROGRAMME[currentIndex];
   if (!item || breakTimer) return;
   markOffLive();
@@ -632,6 +652,7 @@ function startPresence() {
 let newsMode = null;
 let newsTimer = null;
 let newsDataTimer = null;
+let dismissedNews = null; // window label the viewer chose to skip; cleared when the window ends
 
 function newsRemaining(w) {
   const now = nowLocalMinutes();
@@ -660,8 +681,8 @@ function enterNews(w) {
   $('nowBadge').className = 'badge live';
   $('nowTime').textContent = '~' + newsRemaining(w) + ' min of news';
   $('progressBar').style.transform = 'scaleX(1)';
-  document.querySelector('.transport').style.display = 'none';
   document.querySelector('.reactions').style.display = 'none';
+  renderTransport();
   renderNewsGuide(w);
   document.title = 'Station One — Live: ' + w.source;
   logSignal('tune', { id: 'news:' + w.label });
@@ -673,18 +694,29 @@ function enterNews(w) {
   }, 1000);
 }
 
-function exitNews() {
+/* Leave news, play the loop at the live position. Does NOT clear
+   dismissedNews (skip stays dismissed until the window ends). */
+function exitToLoop() {
   newsMode = null;
   clearInterval(newsDataTimer);
-  document.querySelector('.transport').style.display = '';
   document.querySelector('.reactions').style.display = '';
-  backToLive(); // rejoin the loop at the shared wall-clock position
+  const { index, offset } = locate(livePosition());
+  playItem(index, offset);
+}
+
+function skipNews() {
+  if (!newsMode) return;
+  dismissedNews = newsMode.label; // stay off this window until it ends
+  offLiveFlag = true;             // expose "Back to live" so they can rejoin
+  toast('Back to the programme');
+  exitToLoop();
 }
 
 function maybeSwitchNews() {
   const w = activeNewsWindow(nowLocalMinutes(), NEWS);
-  if (w && (!newsMode || newsMode.label !== w.label)) enterNews(w);
-  else if (!w && newsMode) exitNews();
+  if (!w) { dismissedNews = null; if (newsMode) exitToLoop(); return; }
+  if (dismissedNews === w.label) return;      // viewer opted out of this window
+  if (!newsMode || newsMode.label !== w.label) enterNews(w);
 }
 
 function startNews() {
@@ -753,6 +785,7 @@ $('btnTunein').addEventListener('click', async () => {
 
 $('btnLive').addEventListener('click', backToLive);
 $('btnNext').addEventListener('click', nextItem);
+$('btnSkipNews').addEventListener('click', skipNews);
 
 $('btnLove').addEventListener('click', () => {
   const item = PROGRAMME[currentIndex];

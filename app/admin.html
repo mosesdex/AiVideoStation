@@ -70,6 +70,8 @@
   }
   .smart-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
+  .news-h { font-family: var(--font-identity); font-size: 22px; font-weight: 650; letter-spacing: -0.02em; margin: 44px 0 4px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .news-sub { color: var(--ink-muted); font-size: 14px; margin-bottom: 18px; max-width: 62ch; }
   .actions { display: flex; gap: 12px; margin-top: 22px; align-items: center; flex-wrap: wrap; }
   .status { font-size: 14px; color: var(--ink-muted); }
   .status.ok { color: var(--ok); }
@@ -122,6 +124,18 @@
       <button class="btn btn-primary" style="font-size:15px; padding:12px 30px" id="btnSave">Publish programme</button>
       <span class="status" id="status" role="status"></span>
     </div>
+
+    <h2 class="news-h">Live news windows</h2>
+    <p class="news-sub">At these local times the station cuts to a live channel, then resumes the programme. Use 24/7 live channels (Al Jazeera, Arise) for reliability.</p>
+    <div class="rows" id="newsRows"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="btnAddNews">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add news window
+      </button>
+      <button class="btn btn-primary" style="font-size:15px; padding:12px 30px" id="btnSaveNews">Publish news windows</button>
+      <span class="status" id="newsStatus" role="status"></span>
+    </div>
   </section>
 </div>
 
@@ -169,12 +183,53 @@
   </div>
 </template>
 
+<template id="newsRowTpl">
+  <div class="row news-row">
+    <span class="pos"></span>
+    <div class="fields">
+      <div class="wide">
+        <label>Window label</label>
+        <input class="field n-label" placeholder="Prime World News">
+      </div>
+      <div>
+        <label>Starts (local)</label>
+        <input class="field n-start" type="time">
+      </div>
+      <div>
+        <label>Ends (local)</label>
+        <input class="field n-end" type="time">
+      </div>
+      <div>
+        <label>Channel preset</label>
+        <select class="field n-preset">
+          <option value="">— pick or enter below —</option>
+          <option value="UCNye-wNBqNL5ZzHSJj3l8Bg|Al Jazeera English">Al Jazeera English</option>
+          <option value="UCyEJX-kSj0kOOCS7Qlq2G7g|Arise News">Arise News (Nigeria)</option>
+          <option value="UCupvZG-5ko_eiXAupbDfxWw|CNN">CNN</option>
+        </select>
+      </div>
+      <div>
+        <label>Source name</label>
+        <input class="field n-source" placeholder="Al Jazeera English">
+      </div>
+      <div>
+        <label>YouTube channel ID</label>
+        <input class="field n-channel" placeholder="UC…">
+      </div>
+    </div>
+    <div class="tools">
+      <button class="icon-btn danger n-del" type="button" aria-label="Delete window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+    </div>
+  </div>
+</template>
+
 <script type="module">
-import { totalSeconds, locate, livePosition, mapRow } from './station-core.mjs?v=3';
-import { fetchStation, fetchProgramme, verifyOwnerKey, saveProgramme } from './station-api.mjs?v=3';
+import { totalSeconds, locate, livePosition, mapRow, mapNewsRow } from './station-core.mjs?v=4';
+import { fetchStation, fetchProgramme, verifyOwnerKey, saveProgramme, fetchNewsWindows, saveNewsWindows } from './station-api.mjs?v=4';
 
 const $ = id => document.getElementById(id);
 let items = [];      // editor model: {type, videoId, src, title, block, slot}
+let news = [];       // news windows: {label, start, end, channel, source}
 let anchor = Date.UTC(2026, 0, 1);
 let stationKey = sessionStorage.getItem('station-one-key') || '';
 
@@ -199,10 +254,12 @@ $('gateForm').addEventListener('submit', async e => {
 async function openEditor() {
   $('gate').style.display = 'none';
   $('editor').style.display = 'block';
-  const [station, rows] = await Promise.all([fetchStation(), fetchProgramme()]);
+  const [station, rows, nw] = await Promise.all([fetchStation(), fetchProgramme(), fetchNewsWindows().catch(() => [])]);
   anchor = Number(station.anchor_ms) || anchor;
   items = rows.map(mapRow);
+  news = (nw || []).map(mapNewsRow);
   render();
+  renderNews();
 }
 
 /* ---------- editor ---------- */
@@ -315,6 +372,73 @@ $('btnSave').addEventListener('click', async () => {
 
 function setStatus(msg, cls = '') {
   const s = $('status');
+  s.textContent = msg;
+  s.className = 'status ' + cls;
+}
+
+/* ---------- live news windows ---------- */
+const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const toMin = s => { if (!s) return null; const [h, m] = s.split(':').map(Number); return h * 60 + m; };
+
+function renderNews() {
+  const list = $('newsRows');
+  list.replaceChildren();
+  news.forEach((w, i) => {
+    const node = $('newsRowTpl').content.firstElementChild.cloneNode(true);
+    node.querySelector('.pos').textContent = i + 1;
+    const nLabel = node.querySelector('.n-label');
+    const nStart = node.querySelector('.n-start');
+    const nEnd = node.querySelector('.n-end');
+    const nPreset = node.querySelector('.n-preset');
+    const nSource = node.querySelector('.n-source');
+    const nChannel = node.querySelector('.n-channel');
+
+    nLabel.value = w.label || '';
+    nStart.value = Number.isFinite(w.start) ? hhmm(w.start) : '';
+    nEnd.value = Number.isFinite(w.end) ? hhmm(w.end) : '';
+    nSource.value = w.source || '';
+    nChannel.value = w.channel || '';
+
+    nLabel.addEventListener('input', () => { w.label = nLabel.value; });
+    nStart.addEventListener('input', () => { w.start = toMin(nStart.value); });
+    nEnd.addEventListener('input', () => { w.end = toMin(nEnd.value); });
+    nSource.addEventListener('input', () => { w.source = nSource.value; });
+    nChannel.addEventListener('input', () => { w.channel = nChannel.value.trim(); });
+    nPreset.addEventListener('change', () => {
+      if (!nPreset.value) return;
+      const [ch, src] = nPreset.value.split('|');
+      w.channel = ch; w.source = src;
+      nChannel.value = ch; nSource.value = src;
+      nPreset.value = '';
+    });
+    node.querySelector('.n-del').addEventListener('click', () => { news.splice(i, 1); renderNews(); });
+    list.appendChild(node);
+  });
+}
+
+$('btnAddNews').addEventListener('click', () => {
+  news.push({ label: 'News', start: 1200, end: 1260, channel: '', source: '' });
+  renderNews();
+});
+
+$('btnSaveNews').addEventListener('click', async () => {
+  const bad = news.findIndex(w => !w.label?.trim() || w.start == null || w.end == null || !w.channel?.trim());
+  if (bad !== -1) { setNewsStatus(`Window ${bad + 1} needs a label, start, end, and channel ID.`, 'err'); return; }
+  setNewsStatus('Publishing…');
+  try {
+    const payload = news.map(w => ({
+      label: w.label.trim(), start_min: w.start, end_min: w.end,
+      channel_id: w.channel.trim(), source_name: (w.source || 'News').trim(),
+    }));
+    const n = await saveNewsWindows(stationKey, payload);
+    setNewsStatus(`Published ${n} news window${n === 1 ? '' : 's'}. Live at their local times.`, 'ok');
+  } catch (err) {
+    setNewsStatus('Publish failed — check your station key and connection.', 'err');
+  }
+});
+
+function setNewsStatus(msg, cls = '') {
+  const s = $('newsStatus');
   s.textContent = msg;
   s.className = 'status ' + cls;
 }

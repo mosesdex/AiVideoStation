@@ -62,6 +62,10 @@ export async function fetchNewsWindows() {
   return res.json();
 }
 
+export function saveNewsWindows(key, items) {
+  return rpc('save_news_windows', { p_key: key, p_items: items });
+}
+
 export function heartbeat(session) {
   return rpc('heartbeat', { p_session: session }).catch(() => {});
 }
