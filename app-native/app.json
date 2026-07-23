@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Station One",
+    "slug": "station-one",
+    "version": "1.0.0",
+    "orientation": "default",
+    "scheme": "stationone",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
+    "primaryColor": "#e11d48",
+    "splash": {
+      "backgroundColor": "#000000",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dex.stationone",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "package": "com.dex.stationone"
+    },
+    "androidStatusBar": { "backgroundColor": "#000000", "barStyle": "light-content" }
+  }
+}
