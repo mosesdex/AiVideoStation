@@ -1,0 +1,24 @@
+name: Refresh chart music
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'   # every Monday 04:00 UTC
+  workflow_dispatch:        # manual "Run workflow" button
+    inputs:
+      dry_run:
+        description: 'Dry run (print, do not publish)'
+        type: boolean
+        default: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Refresh chart music
+        env:
+          STATION_KEY: ${{ secrets.STATION_KEY }}
+        run: node scripts/refresh-charts.mjs ${{ inputs.dry_run && '--dry-run' || '' }}

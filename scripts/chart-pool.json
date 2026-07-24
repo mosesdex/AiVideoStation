@@ -1,0 +1,29 @@
+{
+  "_note": "Curated pool of validated official music videos per region. The weekly job re-validates via oEmbed (drops dead), rotates a fresh selection into the station's music slots, and republishes. Expand these arrays over time to keep new songs flowing.",
+  "nigeria-top": [
+    { "videoId": "WcIcVapfqXw", "title": "Rema — Calm Down" },
+    { "videoId": "HLnf2Hz7uNQ", "title": "Wizkid — Kese (Dance)" },
+    { "videoId": "9V_HpS9p4QY", "title": "Ayra Starr — Santa" },
+    { "videoId": "Uj1g5oumzWY", "title": "Burna Boy — TaTaTa" },
+    { "videoId": "7tChMHOrQJM", "title": "Olamide, Wizkid — Kai!" },
+    { "videoId": "bbVZo4Yw7pI", "title": "Asake — Lonely At The Top" },
+    { "videoId": "dPaVQ8C7KrA", "title": "Asake — Remember" },
+    { "videoId": "qR8-uQ5LixE", "title": "Burna Boy — Update" },
+    { "videoId": "XClGUyO7jVk", "title": "Wizkid — Number One" },
+    { "videoId": "NCyOpHmh0mA", "title": "Asake — Forgiveness" }
+  ],
+  "us-top": [
+    { "videoId": "4NRXx6U8ABQ", "title": "The Weeknd — Blinding Lights" },
+    { "videoId": "eVli-tstM5E", "title": "Sabrina Carpenter — Espresso" },
+    { "videoId": "b1kbLwvqugk", "title": "Sabrina Carpenter — Please Please Please" },
+    { "videoId": "V9PVRfjEBTI", "title": "Billie Eilish — BIRDS OF A FEATHER" },
+    { "videoId": "kPa7bsKwL-c", "title": "Chappell Roan — Good Luck, Babe!" }
+  ],
+  "uk-top": [
+    { "videoId": "H5v3kku4y6Q", "title": "Harry Styles — As It Was" },
+    { "videoId": "TUVcZfQe-Kw", "title": "Dua Lipa — Levitating" },
+    { "videoId": "9HDEHj2yzew", "title": "Dua Lipa — Houdini" },
+    { "videoId": "JGwWNGJdvx8", "title": "Ed Sheeran — Shape of You" },
+    { "videoId": "U3ASj1L6_sY", "title": "Adele — Easy On Me" }
+  ]
+}
